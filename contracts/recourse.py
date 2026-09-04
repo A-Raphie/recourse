@@ -84,7 +84,7 @@ This result should be perfectly parsable by a JSON parser without errors.
         amount: u256,
     ) -> None:
         if dispute_id in self.disputes:
-            raise Exception("Dispute id already exists")
+            raise gl.vm.UserError("Dispute id already exists")
 
         payer_hex = gl.message.sender_address.as_hex
         dispute = Dispute(
@@ -105,10 +105,10 @@ This result should be perfectly parsable by a JSON parser without errors.
     @gl.public.write
     def adjudicate(self, dispute_id: str) -> None:
         if dispute_id not in self.disputes:
-            raise Exception("Dispute not found")
+            raise gl.vm.UserError("Dispute not found")
         dispute = self.disputes[dispute_id]
         if dispute.status != "filed":
-            raise Exception("Dispute already adjudicated")
+            raise gl.vm.UserError("Dispute already adjudicated")
 
         verdict = self._judge(
             dispute.service_url, dispute.evidence_url, dispute.description
@@ -122,17 +122,17 @@ This result should be perfectly parsable by a JSON parser without errors.
     @gl.public.write
     def settle(self, dispute_id: str) -> None:
         if dispute_id not in self.disputes:
-            raise Exception("Dispute not found")
+            raise gl.vm.UserError("Dispute not found")
         dispute = self.disputes[dispute_id]
         if dispute.status != "adjudicated":
-            raise Exception("Dispute not adjudicated")
+            raise gl.vm.UserError("Dispute not adjudicated")
 
         dispute.status = "settled"
 
     @gl.public.view
     def get_dispute(self, dispute_id: str) -> dict:
         if dispute_id not in self.disputes:
-            raise Exception("Dispute not found")
+            raise gl.vm.UserError("Dispute not found")
         d = self.disputes[dispute_id]
         return {
             "id": d.id,
