@@ -1,12 +1,13 @@
 # Recourse — Hackathon Orchestrator Ledger
-Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) · Deadline: 2026-09-17 15:30 UTC · Current stage: 2 (plan + design, seed slice) · Updated: 2026-09-04
+Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) · Deadline: 2026-09-17 15:30 UTC · Current stage: 3 (build) · Updated: 2026-09-04 (brief APPROVED by Raphie "all good"; heavy build started early per his call)
 
 ## Sweeps
 | Stage | Entered | Exited | Notes |
 |---|---|---|---|
 | 0 Calibrate | 2026-09-04 | 2026-09-04 | verdict research done pre-approval (playbook win/loss applied) |
 | 1 Idea + validation | 2026-09-04 | 2026-09-04 | idea locked: post-payment dispute layer for agent payments (x402 first) |
-| 2 Plan + design | 2026-09-04 | (open) | seed slice: scaffold + smoke + spike done; brief + design deferred to heavy-build entry Sep 10 |
+| 2 Plan + design | 2026-09-04 | 2026-09-04 | BRIEF APPROVED ("all good"); design axes locked (tank-ink + verdict pair + THE OPEN JURY); deploy target pinned (Vercel + Studio) |
+| 3 Build | 2026-09-04 | (open) | engine slice first (contract v2, MCP, x402 rail); UI family loads before first component |
 
 ## Skill ledger
 | Skill | Stage | State | Note (reason / revisit trigger / result) |

@@ -9,6 +9,7 @@ from genlayer import *
 @dataclass
 class Dispute:
     id: str
+    seq: u256
     payer: str
     provider: str
     service_url: str
@@ -21,18 +22,26 @@ class Dispute:
     confidence: str
 
 
+REASON_CODES = ("service_unavailable", "wrong_content", "not_as_promised", "fulfilled")
+
+
 class Recourse(gl.Contract):
     """Post-payment recourse for the agent economy.
 
-    A payer agent files a dispute against a paid service. Validators render
-    the service promise and the actual deliverable, judge the claim under
-    consensus (eq_principle), and the dispute settles refund-or-deny on-chain.
+    Agents route the disputed value through this contract: deposit credits a
+    party's balance, filing a dispute locks the disputed amount, and the
+    GenLayer validator jury settles it refund-or-deny. On settle the locked
+    amount returns to the payer (refund) or releases to the provider (deny).
+    Amounts are ledger units for the hackathon demo, not live token transfers.
     """
 
     disputes: TreeMap[str, Dispute]
+    balances: TreeMap[str, u256]
+    locked: TreeMap[str, u256]
+    dispute_count: u256
 
     def __init__(self):
-        pass
+        self.dispute_count = 0
 
     def _judge(self, service_url: str, evidence_url: str, description: str) -> dict:
         def judge() -> str:
@@ -74,6 +83,25 @@ This result should be perfectly parsable by a JSON parser without errors.
         return verdict_json
 
     @gl.public.write
+    def deposit(self, amount: u256) -> None:
+        if amount == 0:
+            raise gl.vm.UserError("Amount must be positive")
+        sender = gl.message.sender_address.as_hex
+        if sender not in self.balances:
+            self.balances[sender] = 0
+        self.balances[sender] += amount
+
+    @gl.public.write
+    def withdraw(self, amount: u256) -> None:
+        if amount == 0:
+            raise gl.vm.UserError("Amount must be positive")
+        sender = gl.message.sender_address.as_hex
+        available = self.balances.get(sender, 0)
+        if available < amount:
+            raise gl.vm.UserError("Insufficient balance")
+        self.balances[sender] = available - amount
+
+    @gl.public.write
     def file_dispute(
         self,
         dispute_id: str,
@@ -85,11 +113,24 @@ This result should be perfectly parsable by a JSON parser without errors.
     ) -> None:
         if dispute_id in self.disputes:
             raise gl.vm.UserError("Dispute id already exists")
+        if amount == 0:
+            raise gl.vm.UserError("Amount must be positive")
 
-        payer_hex = gl.message.sender_address.as_hex
+        payer = gl.message.sender_address.as_hex
+        available = self.balances.get(payer, 0)
+        if available < amount:
+            raise gl.vm.UserError("Insufficient balance, deposit first")
+
+        self.balances[payer] = available - amount
+        if payer not in self.locked:
+            self.locked[payer] = 0
+        self.locked[payer] += amount
+
+        self.dispute_count += 1
         dispute = Dispute(
             id=dispute_id,
-            payer=payer_hex,
+            seq=self.dispute_count,
+            payer=payer,
             provider=provider,
             service_url=service_url,
             evidence_url=evidence_url,
@@ -127,7 +168,31 @@ This result should be perfectly parsable by a JSON parser without errors.
         if dispute.status != "adjudicated":
             raise gl.vm.UserError("Dispute not adjudicated")
 
+        payer = dispute.payer
+        provider = dispute.provider
+        locked_left = self.locked.get(payer, 0)
+        if locked_left < dispute.amount:
+            raise gl.vm.UserError("Escrow state inconsistent")
+
+        self.locked[payer] = locked_left - dispute.amount
+        if dispute.refund:
+            if payer not in self.balances:
+                self.balances[payer] = 0
+            self.balances[payer] += dispute.amount
+        else:
+            if provider not in self.balances:
+                self.balances[provider] = 0
+            self.balances[provider] += dispute.amount
+
         dispute.status = "settled"
+
+    @gl.public.view
+    def get_balance(self, account: str) -> dict:
+        addr = Address(account).as_hex
+        return {
+            "available": self.balances.get(addr, 0),
+            "locked": self.locked.get(addr, 0),
+        }
 
     @gl.public.view
     def get_dispute(self, dispute_id: str) -> dict:
@@ -136,6 +201,7 @@ This result should be perfectly parsable by a JSON parser without errors.
         d = self.disputes[dispute_id]
         return {
             "id": d.id,
+            "seq": d.seq,
             "payer": d.payer,
             "provider": d.provider,
             "service_url": d.service_url,
@@ -151,3 +217,47 @@ This result should be perfectly parsable by a JSON parser without errors.
     @gl.public.view
     def get_disputes(self) -> list:
         return [self.get_dispute(d_id) for d_id in self.disputes.keys()]
+
+    @gl.public.view
+    def get_disputes_by_party(self, account: str) -> list:
+        addr = Address(account).as_hex
+        out = []
+        for d_id in self.disputes.keys():
+            d = self.get_dispute(d_id)
+            if d["payer"].lower() == addr.lower() or d["provider"].lower() == addr.lower():
+                out.append(d)
+        return out
+
+    @gl.public.view
+    def get_stats(self) -> dict:
+        filed = 0
+        adjudicated = 0
+        settled = 0
+        refunded = 0
+        denied = 0
+        total_disputed = 0
+        total_refunded = 0
+        for d_id in self.disputes.keys():
+            d = self.disputes[d_id]
+            total_disputed += d.amount
+            if d.status == "filed":
+                filed += 1
+            elif d.status == "adjudicated":
+                adjudicated += 1
+            elif d.status == "settled":
+                settled += 1
+                if d.refund:
+                    refunded += 1
+                    total_refunded += d.amount
+                else:
+                    denied += 1
+        return {
+            "disputes": filed + adjudicated + settled,
+            "filed": filed,
+            "adjudicated": adjudicated,
+            "settled": settled,
+            "refunded": refunded,
+            "denied": denied,
+            "total_disputed": total_disputed,
+            "total_refunded": total_refunded,
+        }
