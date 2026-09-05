@@ -2,5 +2,6 @@
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
   "/api/mcp/route": "/api/mcp",
+  "/api/sell/fx-quote/route": "/api/sell/fx-quote",
   "/page": "/"
 }

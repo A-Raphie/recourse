@@ -44,6 +44,12 @@
       "regex": "^/api/mcp(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/mcp(?:/)?$"
+    },
+    {
+      "page": "/api/sell/fx-quote",
+      "regex": "^/api/sell/fx\\-quote(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sell/fx\\-quote(?:/)?$"
     }
   ],
   "dataRoutes": [],

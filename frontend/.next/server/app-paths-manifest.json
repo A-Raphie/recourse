@@ -2,5 +2,6 @@
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
   "/api/mcp/route": "app/api/mcp/route.js",
+  "/api/sell/fx-quote/route": "app/api/sell/fx-quote/route.js",
   "/page": "app/page.js"
 }
