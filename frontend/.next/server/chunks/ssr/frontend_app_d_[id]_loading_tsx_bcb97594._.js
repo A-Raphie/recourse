@@ -1,3 +1,0 @@
-module.exports=[65207,a=>{"use strict";var b=a.i(7997);function c(){return(0,b.jsxs)("main",{className:"mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6",children:[(0,b.jsx)("div",{className:"skeleton mb-4 h-6 w-40"}),(0,b.jsx)("div",{className:"skeleton mb-8 h-16 w-64"}),(0,b.jsxs)("div",{className:"grid grid-cols-1 gap-5 lg:grid-cols-5",children:[(0,b.jsx)("div",{className:"skeleton h-96 lg:col-span-3"}),(0,b.jsxs)("div",{className:"flex flex-col gap-5 lg:col-span-2",children:[(0,b.jsx)("div",{className:"skeleton h-36"}),(0,b.jsx)("div",{className:"skeleton h-72"})]})]})]})}a.s(["default",()=>c])}];
-
-//# sourceMappingURL=frontend_app_d_%5Bid%5D_loading_tsx_bcb97594._.js.map

@@ -1,3 +1,0 @@
-module.exports=[12538,a=>{"use strict";var b=a.i(87924);function c({reset:a}){return(0,b.jsxs)("main",{className:"mx-auto flex min-h-dvh w-full max-w-6xl flex-col items-start justify-center px-4 sm:px-6",children:[(0,b.jsx)("p",{className:"micro mb-3",style:{color:"var(--status-error)"},children:"Chain error"}),(0,b.jsx)("h1",{className:"mb-4",style:{fontSize:"clamp(2rem, 5vw, 3.4rem)"},children:"The GenLayer RPC failed on this one."}),(0,b.jsx)("p",{className:"caption mb-7 max-w-lg",children:"Reads go straight to the studio network. It refuses sometimes; the state is fine. Retry."}),(0,b.jsx)("button",{className:"btn btn-primary",onClick:a,children:"Retry"})]})}a.s(["default",()=>c])}];
-
-//# sourceMappingURL=frontend_app_error_tsx_5dac3e87._.js.map

@@ -8,3 +8,4 @@ node_modules/
 .env
 frontend/.env
 frontend/.data/
+frontend/.next
