@@ -47,5 +47,6 @@ Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) ·
 ## Seed slice results (2026-09-04)
 - Scaffold: boilerplate cloned, fresh git, stray root __init__.py removed (broke pytest package resolution)
 - Toolchain: 43/43 boilerplate direct tests pass on Python 3.14.4
-- Spike: contracts/recourse.py (file → adjudicate via web.render + exec_prompt under eq_principle.strict_eq → settle) + 6/6 direct tests in 0.07s
+- Spike: contracts/recourse.py (file -> adjudicate via web.render + exec_prompt under eq_principle -> settle) + 6/6 direct tests in 0.07s
 - Kill-check verdict: mechanic is consensus-settled state transition, not a prompt wrapper; GO confirmed for heavy build
+- Real-consensus slice (Sep 4 evening): integration flow GREEN on hosted Studio (studionet) in 54s: deploy -> file -> adjudicate -> settle, verdict refund=True code=service_unavailable confidence=high. Key finding: strict_eq over free-text reason = validator disagreement (vote: disagree, state never commits); fix = enum verdict surface (refund bool + reason_code enum + confidence). prompt_non_comparative exists in the SDK but the locally pinned runner lacks it (returns None in direct mode; newer runner hash not in local bundle). gltest API shapes: reads .call(), writes .transact(); boilerplate's own integration tests are stale against gltest 0.29.2 (wrong import + invocation shapes). Evidence fixtures served from raw.githubusercontent on this repo so validators render real URLs.
