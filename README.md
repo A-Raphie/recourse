@@ -1,143 +1,58 @@
-# Sample GenLayer project
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit/)
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/8Jm4v89VAu)
-[![Telegram](https://img.shields.io/badge/Telegram--T.svg?style=social&logo=telegram)](https://t.me/genlayer)
-[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/yeagerai.svg?style=social&label=Follow%20%40GenLayer)](https://x.com/GenLayer)
-[![GitHub star chart](https://img.shields.io/github/stars/yeagerai/genlayer-project-boilerplate?style=social)](https://star-history.com/#yeagerai/genlayer-js)
+# Recourse
 
-## About
-This project includes the boilerplate code for a GenLayer use case implementation, specifically a football bets game.
+**Chargebacks for the agent economy.** An agent pays a provider, the deliverable comes back broken, and until now that was the end of the story. Recourse is a GenLayer intelligent contract where the payer files a dispute with pinned evidence, a jury of validators judges the claim under consensus, and the escrowed amount settles refund-or-deny on-chain.
 
-## What's included
-- An example intelligent contract (Football Bets) with web access and LLM integration
-- **Direct mode tests** — fast, in-memory unit tests with web/LLM mocking (~ms per test)
-- **Integration tests** — full end-to-end tests against GenLayer Studio
-- **Contract linting** — static analysis to catch common contract issues before deployment
-- **CI pipeline** — GitHub Actions workflow for linting and direct tests
-- A production-ready Next.js 15 frontend with TypeScript, TanStack Query, and Radix UI
-- Configuration file template and deployment scripts
+- **Live:** https://recourse-ebon.vercel.app
+- **Contract:** `0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e` (GenLayer Studio testnet, chain 61999)
+- **MCP endpoint:** `https://recourse-ebon.vercel.app/api/mcp` (GET self-describes; `llms.txt` at the root)
+- **Track:** Agentic Commerce Infrastructure · GenLayer Agent Tank
 
-## Requirements
-- Python >= 3.12
-- [GenLayer CLI](https://github.com/genlayerlabs/genlayer-cli) globally installed: `npm install -g genlayer`
-- GenLayer Studio (for integration tests and deployment): Install from [Docs](https://docs.genlayer.com/developers/intelligent-contracts/tooling-setup#using-the-genlayer-studio) or use the hosted [GenLayer Studio](https://studio.genlayer.com/)
+## The 90-second judge path
 
-## Project Structure
+1. Open the [live feed](https://recourse-ebon.vercel.app). The stats strip and every table row are live chain state, no wallet needed.
+2. Click **File a dispute**. The form ships prefilled with a real failed delivery. **File on chain** locks the amount in escrow.
+3. On the dossier, click **Call the jury**. Five validators each render both evidence URLs, judge under consensus, and vote. About a minute. The seats show model names and votes from the consensus receipt.
+4. Settle: on refund the escrow returns to the payer; on deny it releases to the provider. Every step has an on-chain receipt.
+
+Agents skip the UI entirely: point any MCP client at `/api/mcp` and call `deposit`, `file_dispute`, `adjudicate`, `settle`.
+
+## How it works
 
 ```
-contracts/              # Python intelligent contracts
-tests/
-  direct/               # Fast in-memory tests (no Studio required)
-    test_create_bet.py   # Bet creation logic
-    test_resolve_bet.py  # Bet resolution with web/LLM mocks
-    test_views.py        # Read-only view methods
-  integration/           # Full tests against GenLayer Studio
-    test_football_bets.py
-    fixtures.py          # Expected state fixtures
-frontend/               # Next.js 15 app (TypeScript, TanStack Query, Radix UI)
-deploy/                 # TypeScript deployment scripts
-gltest.config.yaml      # Test runner network configuration
-pyproject.toml          # Python/pytest configuration
-.github/workflows/      # CI pipeline
+payer agent            Recourse (GenLayer)              provider
+    |  deposit escrow units   |                             |
+    |  file_dispute(evidence) |  amount LOCKED              |
+    |                         |  validators render both URLs |
+    |                         |  judge under eq_principle    |
+    |  settle                 |                             |
+    |  <--- refund -----------|  or -- release ------------> |
 ```
 
-## Quick Start
+- **Contract** (`contracts/recourse.py`): escrow ledger (`deposit`, `locked`, settle transfers), dispute lifecycle with state guards, views for stats and per-party feeds. Python on GenVM.
+- **Consensus**: adjudication runs the judge prompt inside `eq_principle.strict_eq` - validators must agree byte-for-byte on the verdict. The verdict surface is deliberately tiny (refund boolean + reason code enum + confidence) because free-text LLM output never agrees across heterogeneous model families. We proved the failure mode live: prose verdicts produce validator `disagree` votes and the transaction silently commits nothing. The UI maps reason codes to human sentences.
+- **Evidence**: both URLs are rendered by validators at adjudication time. The dossier shows the same content with source links.
+- **Jury transparency**: validator seats, model names, and votes come from the adjudication receipt's consensus record. Receipts are indexed out-of-band (`data/txindex-bundled.json` plus in-session capture) because the chain does not expose tx hashes to contract reads; the chain receipt is always the source of truth.
+- **Agent surface**: `/api/mcp` is a hand-rolled JSON-RPC 2.0 streamable-http server (8 tools, GET self-describes). The seller rail (`/api/sell/fx-quote`) is wrapped with the real x402 protocol on Base Sepolia.
 
-### 1. Set up Python environment
+## Honest disclosures
 
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+| Area | State |
+|---|---|
+| Escrow units | Ledger entries on the Studio testnet, not live token transfers. The unit economics are real state transitions; the currency is symbolic. |
+| x402 rail | The seller endpoint ships the real x402 protocol on Base Sepolia (mode `X402_MODE=real`, requires funded test wallets). The deployed demo runs `symbolic` mode, which serves the same endpoint without payment enforcement. |
+| Receipts index | Tx hashes are tracked out-of-band (bundled index + in-session capture). Chain receipts are the source of truth. |
+| Demo disputes | All ledger content comes from real runs (agent-driven and UI-driven), none seeded by hand. |
 
-### 2. Lint your contracts
+## Tests
 
-Run the GenVM linter to catch issues before deployment:
+- 11 direct-mode contract tests (escrow both paths, guards, stats) - `pytest tests/direct/ -v`
+- Integration on the hosted Studio: deposit, file, consensus adjudication, settle - `gltest tests/integration/test_recourse.py -v` (about 110s)
+- MCP flow verified live end to end against the deployed endpoint.
 
-```shell
-genvm-lint check contracts/football_bets.py
-```
+## Stack
 
-The linter catches:
-- Forbidden imports and non-deterministic calls
-- Invalid storage types (must use `TreeMap`, `DynArray`, `u256`, etc.)
-- Missing decorators and return type annotations
-- Non-deterministic operations outside equivalence principle blocks
-- And [20+ other rules](https://github.com/genlayerlabs/genvm-linter)
+Python intelligent contracts on GenVM · genlayer-js · Next.js 16 + Tailwind v4 · hand-rolled MCP JSON-RPC · x402 · Vercel.
 
-### 3. Run direct mode tests
+---
 
-Direct mode tests run contracts in-memory without needing GenLayer Studio. They use mocks for web requests and LLM calls, giving you fast feedback (~milliseconds per test):
-
-```shell
-pytest tests/direct/ -v
-```
-
-Direct mode features used in these tests:
-- `direct_deploy("contracts/file.py")` — deploy contract in memory
-- `direct_vm.sender = address` — set transaction sender
-- `direct_vm.mock_web(pattern, response)` — mock HTTP/render calls
-- `direct_vm.mock_llm(pattern, response)` — mock LLM responses
-- `direct_vm.expect_revert("message")` — assert expected failures
-- `direct_vm.clear_mocks()` — reset mocks between calls
-
-### 4. Deploy the contract
-
-1. Choose your network: `genlayer network`
-2. Deploy: `genlayer deploy` (runs the script in `/deploy/deployScript.ts`)
-
-### 5. Run integration tests
-
-Integration tests deploy the contract to GenLayer Studio and test with real consensus:
-
-```shell
-gltest tests/integration/ -v -s
-```
-
-These require GenLayer Studio running (local or hosted).
-
-### 6. Set up the frontend
-
-1. Copy `frontend/.env.example` to `frontend/.env`
-2. Add your deployed contract address as `NEXT_PUBLIC_CONTRACT_ADDRESS`
-3. Run:
-
-```shell
-cd frontend
-npm install
-npm run dev
-```
-
-The app will be available at http://localhost:3000/.
-
-## How the Football Bets Contract Works
-
-1. **Creating Bets**: Users bet on a football match by providing the game date, teams, and predicted winner.
-2. **Resolving Bets**: After the match, the contract fetches results from BBC Sport, uses an LLM to extract the score, and validates via the equivalence principle.
-3. **Points**: Correct predictions earn points. Users can query their points or the leaderboard.
-
-## Testing Strategy
-
-| Test Type | Command | Speed | Requires Studio |
-|-----------|---------|-------|-----------------|
-| **Lint** | `genvm-lint check contracts/*.py` | ~250ms | No |
-| **Direct** | `pytest tests/direct/ -v` | ~ms/test | No |
-| **Integration** | `gltest tests/integration/ -v -s` | ~min/test | Yes |
-
-**Recommended workflow:**
-1. Lint after every contract change
-2. Run direct tests frequently during development
-3. Run integration tests before deployment to verify consensus behavior
-
-For AI coding agents (Claude Code, Cursor, etc.), the linter and direct tests provide the fast feedback loop needed for iterative development without requiring a running Studio instance.
-
-## Community
-- **[Discord](https://discord.gg/8Jm4v89VAu)**: Discussions, support, and announcements
-- **[Telegram](https://t.me/genlayer)**: Informal chats and quick updates
-
-## Documentation
-For detailed information, see our [documentation](https://docs.genlayer.com/).
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Recourse · built by [Raphie](https://x.com/a_raphie) for the GenLayer Agent Tank
