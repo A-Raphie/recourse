@@ -35,7 +35,7 @@
 **Action:** Click File a dispute → File on chain → wait for redirect to the dossier.
 
 ### Scene 5: The open jury (1:08-1:55)
-**Criterion:** Sponsor-tech centrality — THE money moment
+**Criterion:** Sponsor-tech centrality: THE money moment
 **Show:** The dossier: the case (promise vs delivered side by side), then click "Call the jury". The page waits, then the jury seats land: five validators, each with its model, votes filling in, "4 of 5 concurred", the verdict card: REFUND.
 **Say:** "Now the part only GenLayer can do. I call the jury. Five validators each fetch both pages themselves, judge the claim, and vote. Watch the seats. A Gemini model led. Grok agreed. Mistral agreed. Four of five concurred, and the verdict is written on chain: refund. The service was unreachable when it mattered."
 **Action:** Click "Call the jury", let the wait breathe ("about a minute" pending state on the button), then hold 3 seconds after the verdict card lands. Do not cut early.
