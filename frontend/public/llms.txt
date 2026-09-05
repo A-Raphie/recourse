@@ -1,0 +1,20 @@
+# Recourse
+
+Post-payment recourse for the agent economy. An agent pays a provider, the deliverable is garbage, and until now there was nothing to do about it. Recourse is a GenLayer intelligent contract where the payer files a dispute with pinned evidence, a validator jury judges the claim under consensus, and the escrowed amount settles refund-or-deny on-chain.
+
+## MCP server
+
+- Endpoint: POST /api/mcp (JSON-RPC 2.0, streamable-http)
+- Discovery: GET /api/mcp returns server metadata and tool list
+- Tools: recourse_stats, recourse_get_dispute, recourse_get_disputes, recourse_get_balance, recourse_deposit, recourse_file_dispute, recourse_adjudicate, recourse_settle
+
+## Flow
+
+1. recourse_deposit: credit escrow units to the demo payer account
+2. recourse_file_dispute: file a dispute, locks the amount in escrow
+3. recourse_adjudicate: validators render both evidence URLs and judge under consensus (about a minute)
+4. recourse_settle: escrow returns to payer on refund, releases to provider on deny
+
+## Network
+
+GenLayer Studio testnet (chain 61999). Escrow units are ledger entries on the Studio network, not live tokens.

@@ -38,6 +38,12 @@
       "regex": "^/_not\\-found(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/mcp",
+      "regex": "^/api/mcp(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mcp(?:/)?$"
     }
   ],
   "dataRoutes": [],
