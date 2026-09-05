@@ -1,13 +1,30 @@
 # Recourse — Hackathon Orchestrator Ledger
-Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) · Deadline: 2026-09-17 15:30 UTC · Current stage: 3 (build) · Updated: 2026-09-04 (brief APPROVED by Raphie "all good"; heavy build started early per his call)
+Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) · Deadline: 2026-09-17 15:30 UTC · Current stage: 6 (shipped) · Updated: 2026-09-05
 
 ## Sweeps
 | Stage | Entered | Exited | Notes |
 |---|---|---|---|
 | 0 Calibrate | 2026-09-04 | 2026-09-04 | verdict research done pre-approval (playbook win/loss applied) |
 | 1 Idea + validation | 2026-09-04 | 2026-09-04 | idea locked: post-payment dispute layer for agent payments (x402 first) |
-| 2 Plan + design | 2026-09-04 | 2026-09-04 | BRIEF APPROVED ("all good"); design axes locked (tank-ink + verdict pair + THE OPEN JURY); deploy target pinned (Vercel + Studio) |
-| 3 Build | 2026-09-04 | (open) | engine slice first (contract v2, MCP, x402 rail); UI family loads before first component |
+| 2 Plan + design | 2026-09-04 | 2026-09-04 | BRIEF APPROVED ("all good"); design axes locked; deploy target pinned (Vercel + Studio) |
+| 3 Build | 2026-09-04 | 2026-09-05 | engine + MCP + x402 rail + dossier/jury + landing/feed, all render-verified |
+| 4 Verify + polish | 2026-09-05 | 2026-09-05 | render audits fixed (iframes, pills); state matrix pass (populated/empty/offline/mobile); zero-raw-hex gate pass |
+| 5 Ship | 2026-09-05 | 2026-09-05 | SHIPPED: https://recourse-ebon.vercel.app - pre-ship gate verdict SHIPPED (live revision behaviorally verified, metadata battery live, CLI QA on prod incl. DEMO_KEY write) |
+| 6 Demo + submit | 2026-09-05 | (open) | storyboard done (docs/DEMO_SCRIPT.md, ~285 VO words); RECORDING GATED ON RAPHIE'S VO; submission = his click |
+
+## Ship record
+- Production: https://recourse-ebon.vercel.app (Vercel project "recourse", team ernxtos-projects)
+- Canonical contract: 0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e (GenLayer Studio testnet)
+- Env on Vercel: NEXT_PUBLIC_CONTRACT_ADDRESS, NEXT_PUBLIC_DEMO_ADDRESS, SELLER_ADDRESS, DEMO_KEY, X402_MODE=symbolic, NEXT_PUBLIC_SITE_URL (production scope; preview scope unavailable without git-linked project - CLI deploys only)
+- E2E: home + dossier + 404 in browser; MCP CLI QA on prod (read + write proving serverless DEMO_KEY); mobile 375px dossier pass
+- Fixes shipped during rehearsal: receipts index bundled (prod dossiers render jury), in-session jury capture from action receipts, OG card
+- Audit battery: mock-hunter reasoning pass (all visible values = live chain reads; symbolic escrow + x402 mode disclosed), claims exercised against deployment, lighthouse full run skipped per its own timebox note
+
+## Remaining for submission
+1. Raphie: record VO (docs/DEMO_SCRIPT.md Say lines) - hard gate on all takes
+2. Raphie: two faucet hits on buyer wallet 0xf57F8AacC263524eded87FA1217ad2aCF9243ce6 (Base Sepolia ETH + USDC) if real-x402 payment wanted on camera
+3. Takes on Desktop 2 (desktop-demo rules) -> demo-final-gate -> his cut review
+4. Portal submission form (his click, notify-gate) by Sep 14; X posts (x-post-formatting rules, his approval)
 
 ## Skill ledger
 | Skill | Stage | State | Note (reason / revisit trigger / result) |
