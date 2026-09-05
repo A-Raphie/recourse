@@ -1,109 +1,259 @@
-"use client";
+import Link from "next/link";
+import { recourse } from "@/lib/server/genlayer";
+import { SiteFooter } from "@/components/SiteFooter";
+import { FileDisputeForm } from "@/components/dispute/FileDisputeForm";
+import type { RecourseDispute, RecourseStats } from "@/lib/server/genlayer";
 
-import { Navbar } from "@/components/Navbar";
-import { BetsTable } from "@/components/BetsTable";
-import { Leaderboard } from "@/components/Leaderboard";
+export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3210";
+
+function StatusPill({ status, refund }: { status: string; refund: boolean }) {
+  if (status === "settled") {
+    return (
+      <span className={`pill ${refund ? "pill-refund" : "pill-deny"}`}>
+        {refund ? "settled · refunded" : "settled · denied"}
+      </span>
+    );
+  }
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Navbar */}
-      <Navbar />
+    <span className="pill pill-live">
+      <span className="status-dot" />
+      {status}
+    </span>
+  );
+}
 
-      {/* Main Content - Padding to account for fixed navbar */}
-      <main className="flex-grow pt-20 pb-12 px-4 md:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-              Football Prediction Betting
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              AI-powered football match predictions on GenLayer blockchain.
-              <br />
-              Create bets, make predictions, and compete for points.
-            </p>
-          </div>
-
-          {/* Main Grid Layout - 2/1 columns on desktop, stacked on mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Left Column - Bets Table (67% on desktop) */}
-            <div className="lg:col-span-8 animate-slide-up">
-              <BetsTable />
-            </div>
-
-            {/* Right Column - Leaderboard (33% on desktop) */}
-            <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "100ms" }}>
-              <Leaderboard />
-            </div>
-          </div>
-
-          {/* Info Section */}
-          <div className="mt-8 glass-card p-6 md:p-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
-            <h2 className="text-2xl font-bold mb-4">How it Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <div className="text-accent font-bold text-lg">1. Create a Bet</div>
-                <p className="text-sm text-muted-foreground">
-                  Connect your wallet and create a football match prediction. Choose the teams, date, and your predicted winner.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-accent font-bold text-lg">2. Wait for Resolution</div>
-                <p className="text-sm text-muted-foreground">
-                  After the match, the bet creator resolves the bet. GenLayer's AI verifies the actual match result.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-accent font-bold text-lg">3. Earn Points</div>
-                <p className="text-sm text-muted-foreground">
-                  Correct predictions earn you points. Climb the leaderboard and prove your football knowledge!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-2">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <a
-                href="https://genlayer.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
-              >
-                Powered by GenLayer
-              </a>
-              <a
-                href="https://studio.genlayer.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
-              >
-                Studio
-              </a>
-              <a
-                href="https://docs.genlayer.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
-              >
-                Docs
-              </a>
-              <a
-                href="https://github.com/genlayerlabs/genlayer-project-boilerplate"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
-              >
-                GitHub
-              </a>
-          </div>
-        </div>
-      </footer>
+function FlowStep({ n, title, body }: { n: number; title: string; body: string }) {
+  return (
+    <div className="card card-hover p-5">
+      <span
+        className="mb-3 inline-flex items-center justify-center rounded-full font-mono text-xs"
+        style={{
+          width: 26,
+          height: 26,
+          background: "var(--accent)",
+          color: "var(--accent-foreground)",
+        }}
+      >
+        {n}
+      </span>
+      <h3 className="mb-1 text-lg">{title}</h3>
+      <p className="caption">{body}</p>
     </div>
+  );
+}
+
+export default async function Home() {
+  let stats: RecourseStats | null = null;
+  let disputes: RecourseDispute[] = [];
+  let offline = false;
+  try {
+    [stats, disputes] = await Promise.all([recourse.getStats(), recourse.getDisputes()]);
+    disputes = [...disputes].sort((a, b) => Number(b.seq) - Number(a.seq));
+  } catch {
+    offline = true;
+  }
+
+  const statCards = stats
+    ? [
+        { label: "Disputes filed", value: stats.disputes },
+        { label: "Settled by jury", value: stats.settled },
+        { label: "Refunded", value: stats.refunded },
+        { label: "Units returned", value: stats.total_refunded },
+      ]
+    : [];
+
+  return (
+    <>
+      <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6">
+        <nav className="mb-14 flex items-center justify-between">
+          <span className="font-mono text-sm font-bold tracking-wide" style={{ color: "var(--text-primary)" }}>
+            RE·COURSE
+          </span>
+          <div className="flex items-center gap-5 font-mono text-xs">
+            <span className="pill pill-live">
+              <span className="status-dot status-dot-live" /> live
+            </span>
+            <a href="#feed" style={{ color: "var(--text-secondary)" }}>
+              feed
+            </a>
+            <a href="#agent" style={{ color: "var(--text-secondary)" }}>
+              agents
+            </a>
+            <a
+              href="https://github.com/A-Raphie/recourse"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              github
+            </a>
+          </div>
+        </nav>
+
+        {/* Hero: plain verbs, then the proof strips. */}
+        <section className="mb-14">
+          <h1
+            className="max-w-4xl"
+            style={{ fontSize: "clamp(2.4rem, 6vw, 4.2rem)", lineHeight: 1.02 }}
+          >
+            Your agent paid. The service lied.
+            <br />
+            <span style={{ color: "var(--accent)" }}>Get the units back.</span>
+          </h1>
+          <p className="caption mt-5 max-w-2xl text-base">
+            Recourse is a dispute layer for machine-to-machine payments on
+            GenLayer. File with pinned evidence, a jury of validators judges it
+            under consensus, and the escrowed amount settles refund-or-deny
+            on-chain. No emails. No support desk. A court that runs in a minute.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link href="#feed" className="btn btn-primary btn-lg">
+              See live disputes
+            </Link>
+            <Link href="#agent" className="btn btn-ghost btn-lg">
+              Connect your agent
+            </Link>
+          </div>
+          <p className="micro mt-8" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+            live · genlayer studio testnet · contract {CONTRACT.slice(0, 10)}…{CONTRACT.slice(-6)}
+          </p>
+        </section>
+
+        {/* Stats strip: four numbers, glance-first. */}
+        <section className="mb-14" aria-label="Live stats">
+          {offline ? (
+            <div className="card p-5">
+              <span className="micro" style={{ color: "var(--status-error)" }}>
+                The GenLayer RPC did not answer just now.
+              </span>
+              <p className="caption mt-1">Refresh the page; the chain state is the only source of these numbers.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {statCards.map((s) => (
+                <div key={s.label} className="card p-5">
+                  <p className="micro mb-2">{s.label}</p>
+                  <p className="number-lg">{s.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* How it works. */}
+        <section className="mb-14">
+          <h2 className="mb-5 text-3xl">How a dispute runs</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <FlowStep
+              n={1}
+              title="The agent pays"
+              body="A payer agent buys a service over x402 or any rail. The disputed amount sits in the Recourse escrow ledger."
+            />
+            <FlowStep
+              n={2}
+              title="The deliverable is garbage"
+              body="A 500 page instead of the quote. Until now that was the end of the story: no refund path existed."
+            />
+            <FlowStep
+              n={3}
+              title="The payer files"
+              body="One tool call pins both evidence URLs and locks the amount. Agents file through MCP; humans file below."
+            />
+            <FlowStep
+              n={4}
+              title="The jury settles"
+              body="Validators render both URLs themselves, judge under consensus, and the escrow pays the payer or the provider. On-chain, in about a minute."
+            />
+          </div>
+        </section>
+
+        {/* Live feed: the product proof. */}
+        <section className="mb-14 scroll-mt-16" id="feed" aria-label="Live disputes">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-3xl">Live disputes</h2>
+            <span className="pill pill-live">
+              <span className="status-dot status-dot-live" /> every row is chain state
+            </span>
+          </div>
+
+          <div className="mb-5">
+            <FileDisputeForm />
+          </div>
+
+          {disputes.length === 0 && !offline ? (
+            <div className="card p-6">
+              <p className="caption">
+                No disputes on the ledger yet. File the first one: the form ships
+                prefilled with a real failed delivery.
+              </p>
+            </div>
+          ) : (
+            <div className="card overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b" style={{ borderColor: "var(--border-default)" }}>
+                    <th className="micro px-4 py-3 text-left">Dispute</th>
+                    <th className="micro px-4 py-3 text-left">Amount</th>
+                    <th className="micro px-4 py-3 text-left">Status</th>
+                    <th className="micro px-4 py-3 text-left">Verdict</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {disputes.map((d) => (
+                    <tr
+                      key={d.id}
+                      className="border-b transition-colors last:border-0 hover:bg-subtle"
+                      style={{ borderColor: "var(--border-default)" }}
+                    >
+                      <td className="px-4 py-3">
+                        <Link href={`/d/${d.id}`} className="font-mono text-xs" style={{ color: "var(--accent)" }}>
+                          /d/{d.id}
+                        </Link>
+                      </td>
+                      <td className="tabular px-4 py-3">{d.amount.toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <StatusPill status={d.status} refund={d.refund} />
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
+                        {d.verdict_code || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Connect your agent. */}
+        <section className="mb-6 scroll-mt-16" id="agent" aria-label="Connect your agent">
+          <h2 className="mb-5 text-3xl">Connect your agent</h2>
+          <p className="caption mb-4 max-w-2xl">
+            Any MCP client can run the whole loop: check the ledger, file the
+            dispute, call the jury, collect the settlement. Point it at the
+            endpoint and give it this config:
+          </p>
+          <div className="card overflow-x-auto p-5">
+            <pre className="font-mono text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+{`{
+  "mcpServers": {
+    "recourse": {
+      "url": "${SITE_URL}/api/mcp",
+      "note": "flow: deposit, file_dispute, adjudicate, settle"
+    }
+  }
+}`}
+            </pre>
+          </div>
+          <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+            GET /api/mcp self-describes: tool list, flow, contract address. llms.txt at the root.
+          </p>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

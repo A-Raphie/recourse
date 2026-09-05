@@ -4,6 +4,9 @@
   "/api/action/route": "/api/action",
   "/api/mcp/route": "/api/mcp",
   "/api/sell/fx-quote/route": "/api/sell/fx-quote",
+  "/apple-icon.png/route": "/apple-icon.png",
   "/d/[id]/page": "/d/[id]",
+  "/favicon.ico/route": "/favicon.ico",
+  "/icon.png/route": "/icon.png",
   "/page": "/"
 }
