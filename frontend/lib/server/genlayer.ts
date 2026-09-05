@@ -153,50 +153,56 @@ export type JurySeat = {
 // txindex only tells us which receipt to fetch.
 export async function getContractReceiptJury(disputeId: string): Promise<JurySeat[]> {
   const txs = getTxs(disputeId);
-  const hash = txs["adjudicate"];
+  const hash = txs["adjudicate"]?.hash;
   if (!hash) return [];
 
   const client = readClient();
-  const tx = (await client.getTransaction({
-    hash: hash as unknown as `0x${string}` & { length: 66 },
-  })) as unknown as {
-    consensus_data?: {
-      leader_receipt?: Array<Record<string, unknown>>;
-      validators?: Array<Record<string, unknown>>;
+  try {
+    const tx = (await client.getTransaction({
+      hash: hash as unknown as `0x${string}` & { length: 66 },
+    })) as unknown as {
+      consensus_data?: {
+        leader_receipt?: Array<Record<string, unknown>>;
+        validators?: Array<Record<string, unknown>>;
+      };
     };
-  };
 
-  const cd = tx.consensus_data;
-  if (!cd) return [];
+    const cd = tx.consensus_data;
+    if (!cd) return [];
 
-  const seats: JurySeat[] = [];
+    const seats: JurySeat[] = [];
 
-  const leaderReceipt = cd.leader_receipt?.[0];
-  if (leaderReceipt) {
-    const nodeConfig = leaderReceipt.node_config as
-      | { address?: string; primary_model?: { model?: string } }
-      | undefined;
-    seats.push({
-      role: "leader",
-      address: nodeConfig?.address ?? "",
-      model: nodeConfig?.primary_model?.model ?? "unknown model",
-      vote: (leaderReceipt.vote as string) ?? "proposed",
-      execution_result: String(leaderReceipt.execution_result ?? "UNKNOWN"),
-    });
+    const leaderReceipt = cd.leader_receipt?.[0];
+    if (leaderReceipt) {
+      const nodeConfig = leaderReceipt.node_config as
+        | { address?: string; primary_model?: { model?: string } }
+        | undefined;
+      seats.push({
+        role: "leader",
+        address: nodeConfig?.address ?? "",
+        model: nodeConfig?.primary_model?.model ?? "unknown model",
+        vote: (leaderReceipt.vote as string) ?? "proposed",
+        execution_result: String(leaderReceipt.execution_result ?? "UNKNOWN"),
+      });
+    }
+
+    for (const v of cd.validators ?? []) {
+      const nodeConfig = v.node_config as
+        | { address?: string; primary_model?: { model?: string } }
+        | undefined;
+      seats.push({
+        role: "validator",
+        address: nodeConfig?.address ?? "",
+        model: nodeConfig?.primary_model?.model ?? "unknown model",
+        vote: (v.vote as string) ?? null,
+        execution_result: String(v.execution_result ?? "UNKNOWN"),
+      });
+    }
+
+    return seats;
+  } catch {
+    // RPC hiccup: the dossier still renders; the jury section falls back to
+    // the awaiting state rather than failing the whole page.
+    return [];
   }
-
-  for (const v of cd.validators ?? []) {
-    const nodeConfig = v.node_config as
-      | { address?: string; primary_model?: { model?: string } }
-      | undefined;
-    seats.push({
-      role: "validator",
-      address: nodeConfig?.address ?? "",
-      model: nodeConfig?.primary_model?.model ?? "unknown model",
-      vote: (v.vote as string) ?? null,
-      execution_result: String(v.execution_result ?? "UNKNOWN"),
-    });
-  }
-
-  return seats;
 }
