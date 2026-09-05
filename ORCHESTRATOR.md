@@ -9,11 +9,11 @@ Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) ·
 | 2 Plan + design | 2026-09-04 | 2026-09-04 | BRIEF APPROVED ("all good"); design axes locked; deploy target pinned (Vercel + Studio) |
 | 3 Build | 2026-09-04 | 2026-09-05 | engine + MCP + x402 rail + dossier/jury + landing/feed, all render-verified |
 | 4 Verify + polish | 2026-09-05 | 2026-09-05 | render audits fixed (iframes, pills); state matrix pass (populated/empty/offline/mobile); zero-raw-hex gate pass |
-| 5 Ship | 2026-09-05 | 2026-09-05 | SHIPPED: https://recourse-ebon.vercel.app - pre-ship gate verdict SHIPPED (live revision behaviorally verified, metadata battery live, CLI QA on prod incl. DEMO_KEY write) |
+| 5 Ship | 2026-09-05 | 2026-09-05 | SHIPPED: https://tryrecourse.vercel.app - pre-ship gate verdict SHIPPED (live revision behaviorally verified, metadata battery live, CLI QA on prod incl. DEMO_KEY write) |
 | 6 Demo + submit | 2026-09-05 | (open) | storyboard done (docs/DEMO_SCRIPT.md, ~285 VO words); RECORDING GATED ON RAPHIE'S VO; submission = his click |
 
 ## Ship record
-- Production: https://recourse-ebon.vercel.app (Vercel project "recourse", team ernxtos-projects)
+- Production: https://tryrecourse.vercel.app (Vercel project "recourse", team ernxtos-projects)
 - Canonical contract: 0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e (GenLayer Studio testnet)
 - Env on Vercel: NEXT_PUBLIC_CONTRACT_ADDRESS, NEXT_PUBLIC_DEMO_ADDRESS, SELLER_ADDRESS, DEMO_KEY, X402_MODE=symbolic, NEXT_PUBLIC_SITE_URL (production scope; preview scope unavailable without git-linked project - CLI deploys only)
 - E2E: home + dossier + 404 in browser; MCP CLI QA on prod (read + write proving serverless DEMO_KEY); mobile 375px dossier pass

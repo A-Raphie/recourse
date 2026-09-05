@@ -68,7 +68,7 @@
 **VO word count:** ~285 words. Sits under the 320/3min standard proportionally; the adjudication wait eats screen time without words, which is the honest pacing.
 
 **Submission checklist:**
-- [x] Live URL shown: https://recourse-ebon.vercel.app
+- [x] Live URL shown: https://tryrecourse.vercel.app
 - [x] GitHub shown: https://github.com/A-Raphie/recourse
 - [x] Contract address shown: 0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e
 - [x] Chain shown: GenLayer Studio testnet, explorer link in receipts

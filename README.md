@@ -2,14 +2,14 @@
 
 **Chargebacks for the agent economy.** An agent pays a provider, the deliverable comes back broken, and until now that was the end of the story. Recourse is a GenLayer intelligent contract where the payer files a dispute with pinned evidence, a jury of validators judges the claim under consensus, and the escrowed amount settles refund-or-deny on-chain.
 
-- **Live:** https://recourse-ebon.vercel.app
+- **Live:** https://tryrecourse.vercel.app
 - **Contract:** `0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e` (GenLayer Studio testnet, chain 61999)
-- **MCP endpoint:** `https://recourse-ebon.vercel.app/api/mcp` (GET self-describes; `llms.txt` at the root)
+- **MCP endpoint:** `https://tryrecourse.vercel.app/api/mcp` (GET self-describes; `llms.txt` at the root)
 - **Track:** Agentic Commerce Infrastructure · GenLayer Agent Tank
 
 ## The 90-second judge path
 
-1. Open the [live feed](https://recourse-ebon.vercel.app). The stats strip and every table row are live chain state, no wallet needed.
+1. Open the [live feed](https://tryrecourse.vercel.app). The stats strip and every table row are live chain state, no wallet needed.
 2. Click **File a dispute**. The form ships prefilled with a real failed delivery. **File on chain** locks the amount in escrow.
 3. On the dossier, click **Call the jury**. Five validators each render both evidence URLs, judge under consensus, and vote. About a minute. The seats show model names and votes from the consensus receipt.
 4. Settle: on refund the escrow returns to the payer; on deny it releases to the provider. Every step has an on-chain receipt.
