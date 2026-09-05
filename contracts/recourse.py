@@ -17,7 +17,7 @@ class Dispute:
     amount: u256
     status: str
     refund: bool
-    verdict_reason: str
+    verdict_code: str
     confidence: str
 
 
@@ -59,7 +59,7 @@ stylistic differences.
 Respond in JSON:
 {{
     "refund": bool, // true if the payer deserves a refund
-    "reason": str, // one sentence, evidence-based
+    "reason_code": str, // exactly one of: "service_unavailable", "wrong_content", "not_as_promised", "fulfilled"
     "confidence": str // "low", "medium" or "high"
 }}
 It is mandatory that you respond only using the JSON format above,
@@ -97,7 +97,7 @@ This result should be perfectly parsable by a JSON parser without errors.
             amount=amount,
             status="filed",
             refund=False,
-            verdict_reason="",
+            verdict_code="",
             confidence="",
         )
         self.disputes[dispute_id] = dispute
@@ -115,7 +115,7 @@ This result should be perfectly parsable by a JSON parser without errors.
         )
 
         dispute.refund = bool(verdict["refund"])
-        dispute.verdict_reason = str(verdict["reason"])
+        dispute.verdict_code = str(verdict["reason_code"])
         dispute.confidence = str(verdict["confidence"])
         dispute.status = "adjudicated"
 
@@ -144,7 +144,7 @@ This result should be perfectly parsable by a JSON parser without errors.
             "amount": d.amount,
             "status": d.status,
             "refund": d.refund,
-            "verdict_reason": d.verdict_reason,
+            "verdict_code": d.verdict_code,
             "confidence": d.confidence,
         }
 

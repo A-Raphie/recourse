@@ -46,7 +46,7 @@ def test_adjudicate_refunds_bad_deliverable(direct_vm, direct_deploy, direct_ali
     direct_vm.mock_web(r".*payer\.example.*", {"status": 200, "body": BAD_EVIDENCE_BODY})
     direct_vm.mock_llm(
         JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": True, "reason": "Deliverable is a 500 error, not the promised quote", "confidence": "high"}),
+        json.dumps({"refund": True, "reason_code": "service_unavailable", "confidence": "high"}),
     )
 
     contract.adjudicate("d-001")
@@ -54,7 +54,7 @@ def test_adjudicate_refunds_bad_deliverable(direct_vm, direct_deploy, direct_ali
     d = contract.get_dispute("d-001")
     assert d["status"] == "adjudicated"
     assert d["refund"] is True
-    assert "500" in d["verdict_reason"]
+    assert d["verdict_code"] == "service_unavailable"
 
 
 def test_adjudicate_denies_fulfilled_service(direct_vm, direct_deploy, direct_alice):
@@ -69,7 +69,7 @@ def test_adjudicate_denies_fulfilled_service(direct_vm, direct_deploy, direct_al
     direct_vm.mock_web(r".*payer\.example.*", {"status": 200, "body": GOOD_EVIDENCE_BODY})
     direct_vm.mock_llm(
         JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": False, "reason": "Deliverable matches the promised live quote", "confidence": "high"}),
+        json.dumps({"refund": False, "reason_code": "fulfilled", "confidence": "high"}),
     )
 
     contract.adjudicate("d-002")
@@ -91,7 +91,7 @@ def test_settle_after_adjudication(direct_vm, direct_deploy, direct_alice):
     direct_vm.mock_web(r".*payer\.example.*", {"status": 200, "body": BAD_EVIDENCE_BODY})
     direct_vm.mock_llm(
         JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": True, "reason": "Deliverable is a 500 error", "confidence": "high"}),
+        json.dumps({"refund": True, "reason_code": "service_unavailable", "confidence": "high"}),
     )
     contract.adjudicate("d-001")
     contract.settle("d-001")
@@ -116,7 +116,7 @@ def test_double_adjudicate_fails(direct_vm, direct_deploy, direct_alice):
     direct_vm.mock_web(r".*payer\.example.*", {"status": 200, "body": BAD_EVIDENCE_BODY})
     direct_vm.mock_llm(
         JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": True, "reason": "Deliverable is a 500 error", "confidence": "high"}),
+        json.dumps({"refund": True, "reason_code": "service_unavailable", "confidence": "high"}),
     )
     contract.adjudicate("d-001")
 
