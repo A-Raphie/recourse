@@ -49,20 +49,23 @@ export default async function DossierPage({
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
       <header className="mb-6">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="micro" style={{ color: "var(--accent)" }}>
-              ← Recourse
+        <nav className="mb-3 flex flex-wrap items-center justify-between gap-3" aria-label="Breadcrumb">
+          <div className="flex items-center gap-2 font-mono text-xs">
+            <Link
+              href="/"
+              className="btn btn-ghost"
+              style={{ minHeight: 0, padding: "4px 10px", fontSize: "0.75rem" }}
+            >
+              ← All disputes
             </Link>
-            <span className={`pill ${statusPillClass(dispute.status)}`}>
-              <span className={`status-dot${settled ? " status-dot-live" : ""}`} />
-              {dispute.status}
-            </span>
+            <span style={{ color: "var(--text-muted)" }}>/</span>
+            <span style={{ color: "var(--text-secondary)" }}>{dispute.id}</span>
           </div>
-          <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>
-            {dispute.id}
+          <span className={`pill ${statusPillClass(dispute.status)}`}>
+            <span className={`status-dot${settled ? " status-dot-live" : ""}`} />
+            {dispute.status}
           </span>
-        </div>
+        </nav>
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -82,6 +85,8 @@ export default async function DossierPage({
               description={dispute.description}
               promisedText={promisedText}
               deliveredText={deliveredText}
+              refund={dispute.refund}
+              adjudicated={dispute.status !== "filed"}
             />
           </div>
           <div className="flex flex-col gap-5 lg:col-span-2">

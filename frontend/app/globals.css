@@ -48,10 +48,11 @@
   --bg-surface: #002a3d;   /* tank-panel: cards */
   --bg-overlay: #07384c;   /* panel lightened one step for popovers */
 
-  /* Text tiers, exactly three. */
+  /* Text tiers, exactly three. Secondary and muted sit above 7:1 and 4.5:1
+     on the base canvas so 12-13px mono never washes out. */
   --text-primary: #ffffff;
-  --text-secondary: #bcd5df;  /* tank-muted */
-  --text-muted: #7fa8b8;      /* tank-muted pulled toward the border hue, still 4.5:1 on base */
+  --text-secondary: #cfe2ea;  /* lifted from tank-muted for evidence legibility */
+  --text-muted: #9dbfcd;      /* lifted tank-muted; ≥ 6:1 on base and subtle */
 
   /* Border scale, two. */
   --border-default: #06506a;  /* tank-border */

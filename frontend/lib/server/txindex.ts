@@ -14,7 +14,8 @@ import bundled from "@/data/txindex-bundled.json";
 const DATA_DIR = join(process.cwd(), ".data");
 const FILE = join(DATA_DIR, "txindex.json");
 
-type TxIndex = Record<string, Record<string, string>>;
+type TxEntry = { hash: string; at?: string };
+type TxIndex = Record<string, Record<string, TxEntry>>;
 
 function readLocal(): TxIndex {
   try {
@@ -25,21 +26,34 @@ function readLocal(): TxIndex {
   }
 }
 
-export function recordTx(disputeId: string, kind: string, hash: string) {
+export function recordTx(
+  disputeId: string,
+  kind: string,
+  hash: string,
+  at?: string,
+) {
   try {
     if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
     const index = readLocal();
-    index[disputeId] = { ...(index[disputeId] ?? {}), [kind]: hash };
+    index[disputeId] = {
+      ...(index[disputeId] ?? {}),
+      [kind]: { hash, ...(at ? { at } : {}) },
+    };
     writeFileSync(FILE, JSON.stringify(index, null, 1));
   } catch {
     // deployed filesystems are ephemeral; the client receipt capture covers it
   }
 }
 
-export function getTxs(disputeId: string): Record<string, string> {
-  const merged: Record<string, string> = {
-    ...((bundled as TxIndex)[disputeId] ?? {}),
-    ...readLocal()[disputeId],
+export function getTxs(disputeId: string): Record<string, TxEntry> {
+  const bundledIndex = bundled as unknown as TxIndex;
+  const merged: Record<string, TxEntry> = {
+    ...(bundledIndex[disputeId] ?? {}),
+    ...(readLocal()[disputeId] ?? {}),
   };
+  // legacy rows carry bare hash strings; normalize so callers always get objects
+  for (const [kind, v] of Object.entries(merged)) {
+    if (typeof v === "string") merged[kind] = { hash: v };
+  }
   return merged;
 }

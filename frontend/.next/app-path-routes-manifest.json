@@ -8,5 +8,6 @@
   "/d/[id]/page": "/d/[id]",
   "/favicon.ico/route": "/favicon.ico",
   "/icon.png/route": "/icon.png",
+  "/opengraph-image/route": "/opengraph-image",
   "/page": "/"
 }

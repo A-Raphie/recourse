@@ -7,3 +7,4 @@ node_modules/
 # local keys and secrets
 .env
 frontend/.env
+frontend/.data/

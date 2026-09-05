@@ -88,7 +88,7 @@ async function write(
     retries: 60,
     interval: 3000,
   })) as unknown as Record<string, unknown>;
-  if (disputeId) recordTx(disputeId, functionName, hash);
+  if (disputeId) recordTx(disputeId, functionName, hash, String(receipt.created_at ?? ""));
   return { hash, receipt };
 }
 
@@ -158,7 +158,7 @@ export async function getContractReceiptJury(disputeId: string): Promise<JurySea
 
   const client = readClient();
   const tx = (await client.getTransaction({
-    hash: hash as `0x${string}` & { length: 66 },
+    hash: hash as unknown as `0x${string}` & { length: 66 },
   })) as unknown as {
     consensus_data?: {
       leader_receipt?: Array<Record<string, unknown>>;

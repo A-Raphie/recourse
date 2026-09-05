@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { recourse } from "@/lib/server/genlayer";
+import { getTxs } from "@/lib/server/txindex";
+import { SITE_URL } from "@/lib/site";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FileDisputeForm } from "@/components/dispute/FileDisputeForm";
 import type { RecourseDispute, RecourseStats } from "@/lib/server/genlayer";
@@ -7,7 +9,7 @@ import type { RecourseDispute, RecourseStats } from "@/lib/server/genlayer";
 export const dynamic = "force-dynamic";
 
 const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3210";
+const PAGE_SIZE = 8;
 
 function StatusPill({ status, refund }: { status: string; refund: boolean }) {
   if (status === "settled") {
@@ -45,7 +47,18 @@ function FlowStep({ n, title, body }: { n: number; title: string; body: string }
   );
 }
 
-export default async function Home() {
+function short(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam ?? "1") || 1);
+
   let stats: RecourseStats | null = null;
   let disputes: RecourseDispute[] = [];
   let offline = false;
@@ -55,6 +68,10 @@ export default async function Home() {
   } catch {
     offline = true;
   }
+
+  const totalPages = Math.max(1, Math.ceil(disputes.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = disputes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const statCards = stats
     ? [
@@ -93,7 +110,7 @@ export default async function Home() {
           </div>
         </nav>
 
-        {/* Hero: plain verbs, then the proof strips. */}
+        {/* Hero: plain verbs. Agents are the audience; the CTA says so. */}
         <section className="mb-14">
           <h1
             className="max-w-4xl"
@@ -109,21 +126,31 @@ export default async function Home() {
             under consensus, and the escrowed amount settles refund-or-deny
             on-chain. No emails. No support desk. A court that runs in a minute.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="#feed" className="btn btn-primary btn-lg">
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link href="#agent" className="btn btn-primary btn-lg">
+              Connect your agent · MCP
+            </Link>
+            <Link href="#feed" className="btn btn-ghost btn-lg">
               See live disputes
             </Link>
-            <Link href="#agent" className="btn btn-ghost btn-lg">
-              Connect your agent
-            </Link>
           </div>
-          <p className="micro mt-8" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+          <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+            I ship agents: file and settle disputes as MCP tool calls. I buy
+            services: file from the feed below, no wallet needed.
+          </p>
+          <p className="micro mt-5" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
             live · genlayer studio testnet · contract {CONTRACT.slice(0, 10)}…{CONTRACT.slice(-6)}
           </p>
         </section>
 
-        {/* Stats strip: four numbers, glance-first. */}
+        {/* Stats strip: four numbers, framed as the demo ledger they come from. */}
         <section className="mb-14" aria-label="Live stats">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="pill">testnet demo ledger</span>
+            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+              live counts from the GenLayer Studio demo, not production volume
+            </span>
+          </div>
           {offline ? (
             <div className="card p-5">
               <span className="micro" style={{ color: "var(--status-error)" }}>
@@ -191,40 +218,83 @@ export default async function Home() {
               </p>
             </div>
           ) : (
-            <div className="card overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b" style={{ borderColor: "var(--border-default)" }}>
-                    <th className="micro px-4 py-3 text-left">Dispute</th>
-                    <th className="micro px-4 py-3 text-left">Amount</th>
-                    <th className="micro px-4 py-3 text-left">Status</th>
-                    <th className="micro px-4 py-3 text-left">Verdict</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {disputes.map((d) => (
-                    <tr
-                      key={d.id}
-                      className="border-b transition-colors last:border-0 hover:bg-subtle"
-                      style={{ borderColor: "var(--border-default)" }}
-                    >
-                      <td className="px-4 py-3">
-                        <Link href={`/d/${d.id}`} className="font-mono text-xs" style={{ color: "var(--accent)" }}>
-                          /d/{d.id}
-                        </Link>
-                      </td>
-                      <td className="tabular px-4 py-3">{d.amount.toLocaleString()}</td>
-                      <td className="px-4 py-3">
-                        <StatusPill status={d.status} refund={d.refund} />
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
-                        {d.verdict_code || "-"}
-                      </td>
+            <>
+              <div className="card overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b" style={{ borderColor: "var(--border-default)" }}>
+                      <th className="micro px-4 py-3 text-left">Dispute</th>
+                      <th className="micro px-4 py-3 text-left">Filed</th>
+                      <th className="micro px-4 py-3 text-left">Parties</th>
+                      <th className="micro px-4 py-3 text-left">Amount</th>
+                      <th className="micro px-4 py-3 text-left">Status</th>
+                      <th className="micro px-4 py-3 text-left">Verdict</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((d) => {
+                      const filedAt = getTxs(d.id)["file_dispute"]?.at;
+                      return (
+                        <tr
+                          key={d.id}
+                          className="border-b transition-colors last:border-0 hover:bg-subtle"
+                          style={{ borderColor: "var(--border-default)" }}
+                        >
+                          <td className="px-4 py-3">
+                            <Link href={`/d/${d.id}`} className="font-mono text-xs" style={{ color: "var(--accent)" }}>
+                              /d/{d.id}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
+                            {filedAt
+                              ? new Date(filedAt).toLocaleString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone: "UTC",
+                                })
+                              : "…"}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-muted)" }}>
+                            {short(d.payer)} → {short(d.provider)}
+                          </td>
+                          <td className="tabular px-4 py-3">{d.amount.toLocaleString()}</td>
+                          <td className="px-4 py-3">
+                            <StatusPill status={d.status} refund={d.refund} />
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
+                            {d.verdict_code || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {totalPages > 1 && (
+                <div className="mt-3 flex items-center justify-between font-mono text-xs">
+                  <span style={{ color: "var(--text-muted)" }}>
+                    page {safePage} of {totalPages} · {disputes.length} disputes
+                  </span>
+                  <div className="flex gap-3">
+                    {safePage > 1 && (
+                      <Link
+                        href={safePage - 1 === 1 ? "/?#feed" : `/?page=${safePage - 1}#feed`}
+                        style={{ color: "var(--accent)" }}
+                      >
+                        ← newer
+                      </Link>
+                    )}
+                    {safePage < totalPages && (
+                      <Link href={`/?page=${safePage + 1}#feed`} style={{ color: "var(--accent)" }}>
+                        older →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
 
