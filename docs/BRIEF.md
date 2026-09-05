@@ -30,6 +30,10 @@ Core loop: agent pays over x402 → deliverable is bad → payer files a dispute
 
 Cut first if time compresses: multi-chain shape (stay x402-only), provider-side UI, fee/escrow funding mechanics on real tokens (demo uses Studio test balances), post-submit polish.
 
+## Deploy target (pinned at Stage 2 per standing rule)
+
+**Vercel**: Next.js 15 frontend + API routes, including the MCP endpoint at `/api/mcp` (Assay precedent, same architecture). **GenLayer Studio/testnet** carries the contract side: it is the sponsor's hosted validator network, not our infrastructure. No persistent-process backend exists in this scope, so Railway stays unused. Netlify is the fallback only if Vercel blocks something, which nothing currently does.
+
 ## Design direction
 
 ```
