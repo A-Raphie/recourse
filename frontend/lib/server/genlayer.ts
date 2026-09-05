@@ -2,6 +2,7 @@ import { createClient } from "genlayer-js";
 import { TransactionStatus } from "genlayer-js/types";
 import { studionet } from "genlayer-js/chains";
 import { privateKeyToAccount } from "viem/accounts";
+import { recordTx, getTxs } from "./txindex";
 
 type GenlayerClient = ReturnType<typeof createClient>;
 type DemoAccount = ReturnType<typeof privateKeyToAccount>;
@@ -72,6 +73,7 @@ async function read<T>(functionName: string, args: unknown[]): Promise<T> {
 async function write(
   functionName: string,
   args: unknown[],
+  disputeId?: string,
 ): Promise<{ hash: string; receipt: Record<string, unknown> }> {
   const { client } = writeClient();
   const hash = (await client.writeContract({
@@ -86,6 +88,7 @@ async function write(
     retries: 60,
     interval: 3000,
   })) as unknown as Record<string, unknown>;
+  if (disputeId) recordTx(disputeId, functionName, hash);
   return { hash, receipt };
 }
 
@@ -116,19 +119,84 @@ export const recourse = {
     description: string;
     amount: number;
   }) {
-    return write("file_dispute", [
+    return write(
+      "file_dispute",
+      [
+        input.dispute_id,
+        input.provider,
+        input.service_url,
+        input.evidence_url,
+        input.description,
+        input.amount,
+      ],
       input.dispute_id,
-      input.provider,
-      input.service_url,
-      input.evidence_url,
-      input.description,
-      input.amount,
-    ]);
+    );
   },
   async adjudicate(disputeId: string) {
-    return write("adjudicate", [disputeId]);
+    return write("adjudicate", [disputeId], disputeId);
   },
   async settle(disputeId: string) {
-    return write("settle", [disputeId]);
+    return write("settle", [disputeId], disputeId);
   },
 };
+
+export type JurySeat = {
+  role: string;
+  address: string;
+  model: string;
+  vote: string | null;
+  execution_result: string;
+};
+
+// The Open Jury data: the adjudicate tx's consensus record carries every
+// validator's model and vote. Source of truth is the chain receipt; the
+// txindex only tells us which receipt to fetch.
+export async function getContractReceiptJury(disputeId: string): Promise<JurySeat[]> {
+  const txs = getTxs(disputeId);
+  const hash = txs["adjudicate"];
+  if (!hash) return [];
+
+  const client = readClient();
+  const tx = (await client.getTransaction({
+    hash: hash as `0x${string}` & { length: 66 },
+  })) as unknown as {
+    consensus_data?: {
+      leader_receipt?: Array<Record<string, unknown>>;
+      validators?: Array<Record<string, unknown>>;
+    };
+  };
+
+  const cd = tx.consensus_data;
+  if (!cd) return [];
+
+  const seats: JurySeat[] = [];
+
+  const leaderReceipt = cd.leader_receipt?.[0];
+  if (leaderReceipt) {
+    const nodeConfig = leaderReceipt.node_config as
+      | { address?: string; primary_model?: { model?: string } }
+      | undefined;
+    seats.push({
+      role: "leader",
+      address: nodeConfig?.address ?? "",
+      model: nodeConfig?.primary_model?.model ?? "unknown model",
+      vote: (leaderReceipt.vote as string) ?? "proposed",
+      execution_result: String(leaderReceipt.execution_result ?? "UNKNOWN"),
+    });
+  }
+
+  for (const v of cd.validators ?? []) {
+    const nodeConfig = v.node_config as
+      | { address?: string; primary_model?: { model?: string } }
+      | undefined;
+    seats.push({
+      role: "validator",
+      address: nodeConfig?.address ?? "",
+      model: nodeConfig?.primary_model?.model ?? "unknown model",
+      vote: (v.vote as string) ?? null,
+      execution_result: String(v.execution_result ?? "UNKNOWN"),
+    });
+  }
+
+  return seats;
+}
