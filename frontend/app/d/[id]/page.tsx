@@ -6,6 +6,7 @@ import { getContractReceiptJury } from "@/lib/server/genlayer";
 import { StatusPipeline } from "@/components/dossier/StatusPipeline";
 import { EvidenceDuel, fetchText } from "@/components/dossier/EvidenceDuel";
 import { JuryGrid } from "@/components/dossier/JuryGrid";
+import { JuryFromSession } from "@/components/dossier/JuryFromSession";
 import { ReceiptStrip } from "@/components/dossier/ReceiptStrip";
 import { DisputeActions } from "@/components/dossier/DisputeActions";
 
@@ -108,6 +109,7 @@ export default async function DossierPage({
               refund={dispute.refund}
               verdictCode={dispute.verdict_code}
             />
+            {jury.length === 0 && <JuryFromSession disputeId={dispute.id} />}
           </div>
         </div>
 

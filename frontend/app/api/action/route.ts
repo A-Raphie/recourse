@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
       }
       case "adjudicate": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
-        const { hash } = await recourse.adjudicate(dispute_id);
+        const { hash, receipt } = await recourse.adjudicate(dispute_id);
         const dispute = await recourse.getDispute(dispute_id);
-        return NextResponse.json({ ok: true, tx: hash, dispute });
+        return NextResponse.json({ ok: true, tx: hash, dispute, receipt });
       }
       case "settle": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
