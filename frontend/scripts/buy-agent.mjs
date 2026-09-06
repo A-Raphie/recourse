@@ -48,7 +48,7 @@ console.log("Base Sepolia ETH balance:", Number(ethBal) / 1e18);
 
 const paidFetch = wrapFetchWithPayment(fetch, walletClient);
 
-const url = `${BASE}/api/sell/fx-quote${fail ? "?fail=1" : ""}`;
+const url = `${BASE}/api/sell/fx-quote/x402${fail ? "?fail=1" : ""}`;
 console.log("Paying seller for one request:", url);
 const res = await paidFetch(url);
 const body = await res.json();
