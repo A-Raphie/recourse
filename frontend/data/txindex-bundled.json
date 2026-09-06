@@ -51,5 +51,11 @@
   "adjudicate": {
    "hash": "0x6667b8c0a6f2bfdd5b83a3b5e7b0701d45a582d838fc32b4a8a2490c08ca05ba"
   }
+ },
+ "await-1788698761": {
+  "file_dispute": {
+   "hash": "0xc6f3cd89903127aa6f113809a615dac16f9df38625baa8ac775a9156f8e59571",
+   "at": "2026-09-06T12:46:10.588824+00:00"
+  }
  }
 }
