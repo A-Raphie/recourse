@@ -114,7 +114,7 @@ export default async function Home({
         </nav>
 
         {/* HERO: split fold. Left: the pitch. Right: the live control room. */}
-        <section className="hero-wash relative mb-12 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--border-default)" }}>
+        <section className="hero-wash relative mb-16 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--border-default)" }}>
           <div className="grid-texture absolute inset-0" aria-hidden />
           <div className="relative grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-12">
             <div className="flex flex-col justify-center lg:col-span-7">
@@ -130,9 +130,8 @@ export default async function Home({
                 <span style={{ color: "var(--accent)" }}>Get the units back.</span>
               </h1>
               <p className="caption mt-5 max-w-xl text-base">
-                A dispute layer for machine-to-machine payments. File with pinned
-                evidence, a jury of validators judges it under consensus, and the
-                escrowed amount settles on-chain. A court that runs in a minute.
+                A dispute layer for machine-to-machine payments: file with pinned
+                evidence, a validator jury settles it on-chain in about a minute.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Link href="#agent" className="btn btn-primary btn-lg">
@@ -142,8 +141,8 @@ export default async function Home({
                   See live disputes
                 </Link>
               </div>
-              <p className="micro mt-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-                I ship agents: disputes as MCP tool calls · I buy services: file from the feed, no wallet needed
+              <p className="micro mt-5" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
+                genlayer studio · chain 61999 · contract {CONTRACT.slice(0, 8)}…{CONTRACT.slice(-4)}
               </p>
             </div>
 
@@ -165,59 +164,32 @@ export default async function Home({
                     <p className="caption">GenLayer RPC did not answer. Refresh: the chain is the only source.</p>
                   </div>
                 ) : (
-                  <div className="flex flex-1 flex-col gap-4 p-5">
+                  <div className="flex flex-1 flex-col justify-center gap-6 p-6">
                     <div>
-                      <p className="micro mb-1">Units returned by juries</p>
-                      <div className="flex items-baseline gap-3">
-                        <p className="number-xl" style={{ fontSize: "clamp(2.6rem, 4vw, 3.6rem)" }}>
-                          {stats?.total_refunded.toLocaleString() ?? "…"}
-                        </p>
-                        <span className="pill pill-refund" style={{ fontSize: "0.6rem" }}>
-                          {stats?.refunded ?? 0} refunds
+                      <p className="micro mb-2">Units returned by juries</p>
+                      <p className="number-xl" style={{ fontSize: "clamp(2.6rem, 4vw, 3.6rem)" }}>
+                        {stats?.total_refunded.toLocaleString() ?? "…"}
+                      </p>
+                    </div>
+
+                    {disputes[0] ? (
+                      <Link
+                        href={`/d/${disputes[0].id}`}
+                        className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3"
+                        style={{ borderColor: "var(--border-default)", background: "var(--bg-subtle)" }}
+                      >
+                        <span className="font-mono text-xs" style={{ color: "var(--accent)" }}>
+                          latest: /d/{disputes[0].id.slice(0, 20)}
                         </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
-                        <p className="micro" style={{ fontSize: "0.58rem" }}>filed</p>
-                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.disputes ?? 0}</p>
-                      </div>
-                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
-                        <p className="micro" style={{ fontSize: "0.58rem" }}>settled</p>
-                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.settled ?? 0}</p>
-                      </div>
-                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
-                        <p className="micro" style={{ fontSize: "0.58rem" }}>pool</p>
-                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.validator_pool ?? 0}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto">
-                      <p className="micro mb-2" style={{ fontSize: "0.58rem" }}>latest case</p>
-                      {disputes[0] ? (
-                        <Link
-                          href={`/d/${disputes[0].id}`}
-                          className="group flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                          style={{ borderColor: "var(--border-default)", background: "var(--bg-subtle)" }}
-                        >
-                          <span className="font-mono text-xs" style={{ color: "var(--accent)" }}>
-                            /d/{disputes[0].id.slice(0, 22)}
-                          </span>
-                          <span className={`pill ${disputes[0].refund_pct > 0 ? "pill-refund" : "pill-deny"}`} style={{ fontSize: "0.58rem" }}>
-                            {disputes[0].status === "settled"
-                              ? `${disputes[0].refund_pct}% refund`
-                              : disputes[0].status}
-                          </span>
-                        </Link>
-                      ) : (
-                        <span className="caption">No cases yet. Run one below.</span>
-                      )}
-                    </div>
-
-                    <p className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
-                      chain 61999 · contract {CONTRACT.slice(0, 8)}…{CONTRACT.slice(-4)} · every number is chain state
-                    </p>
+                        <span className={`pill ${disputes[0].refund_pct > 0 ? "pill-refund" : "pill-deny"}`} style={{ fontSize: "0.58rem" }}>
+                          {disputes[0].status === "settled"
+                            ? `${disputes[0].refund_pct}% refund`
+                            : disputes[0].status}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="caption">No cases yet. Run one below.</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -226,21 +198,18 @@ export default async function Home({
         </section>
 
         {/* Simulator: the whole flow, one click, on chain. */}
-        <section className="mb-14 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
+        <section className="mb-16 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <h2 className="text-3xl">Watch a dispute run</h2>
             <span className="pill pill-live">
               <span className="status-dot status-dot-live" /> real transactions
-            </span>
-            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-              one click: buy · fail · file · jury · settle
             </span>
           </div>
           <DisputeSimulator />
         </section>
 
         {/* How the escrow stands right now (bento density, glance-first). */}
-        <section className="mb-12" aria-label="Live stats">
+        <section className="mb-16" aria-label="Live stats">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span className="pill">testnet demo ledger</span>
             <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
@@ -257,17 +226,14 @@ export default async function Home({
           ) : (
             <div className="stagger grid grid-cols-2 gap-4 md:grid-cols-4">
               {(stats ? [
-                { label: "Disputes filed", value: stats.disputes, sub: "on the ledger" },
-                { label: "Settled by jury", value: stats.settled, sub: "consensus verdicts" },
-                { label: "Refunded", value: stats.refunded, sub: "units returned" },
-                { label: "Disputed volume", value: stats.total_disputed, sub: "units locked" },
+                { label: "Disputes filed", value: stats.disputes },
+                { label: "Settled by jury", value: stats.settled },
+                { label: "Refunded", value: stats.refunded },
+                { label: "Disputed volume", value: stats.total_disputed },
               ] : []).map((c) => (
-                <div key={c.label} className="card lift p-5">
-                  <p className="micro mb-2">{c.label}</p>
+                <div key={c.label} className="card lift p-6">
+                  <p className="micro mb-3">{c.label}</p>
                   <p className="number-lg">{c.value.toLocaleString()}</p>
-                  <p className="micro mt-1" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
-                    {c.sub}
-                  </p>
                 </div>
               ))}
             </div>
@@ -275,40 +241,37 @@ export default async function Home({
         </section>
 
         {/* How a dispute runs: one connected line, four nodes. */}
-        <section className="mb-12">
-          <h2 className="mb-5 text-3xl">How a dispute runs</h2>
-          <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-4">
+        <section className="mb-16">
+          <h2 className="mb-6 text-3xl">How a dispute runs</h2>
+          <div className="stagger grid grid-cols-1 gap-6 md:grid-cols-4">
             {[
-              { n: 1, title: "The agent pays", body: "A payer buys a service over x402 or any rail. The amount sits in the Recourse escrow ledger.", accent: "var(--refund)" },
-              { n: 2, title: "The deliverable is garbage", body: "A 500 page instead of the quote. Until now: no refund path existed.", accent: "var(--deny)" },
-              { n: 3, title: "The payer files", body: "One tool call pins both evidence URLs and locks amount plus anti-spam stake.", accent: "var(--accent)" },
-              { n: 4, title: "The jury settles", body: "Validators render both URLs, judge under consensus, escrow splits on-chain in about a minute.", accent: "var(--lime)" },
+              { n: 1, title: "The agent pays", body: "A payer buys a service over any rail. The amount sits in escrow.", accent: "var(--refund)" },
+              { n: 2, title: "The deliverable is garbage", body: "A 500 page instead of the quote. No refund path existed.", accent: "var(--deny)" },
+              { n: 3, title: "The payer files", body: "One tool call pins both evidence URLs and locks the stake.", accent: "var(--accent)" },
+              { n: 4, title: "The jury settles", body: "Validators judge under consensus; escrow splits on-chain.", accent: "var(--lime)" },
             ].map((step, i) => (
               <div key={step.n} className="relative">
                 {i > 0 && (
                   <span
                     aria-hidden
-                    className="absolute top-7 hidden h-px w-4 md:block"
-                    style={{ left: -16, background: "var(--border-default)" }}
+                    className="absolute top-9 hidden h-px w-6 md:block"
+                    style={{ left: -24, background: "var(--border-default)" }}
                   />
                 )}
-                <div className="card lift h-full p-5" style={{ borderTop: `2px solid ${step.accent}` }}>
-                  <div className="mb-3 flex items-center gap-3">
-                    <span
-                      className="inline-flex items-center justify-center rounded-full font-mono text-xs"
-                      style={{
-                        width: 28,
-                        height: 28,
-                        background: "var(--bg-subtle)",
-                        border: `1px solid ${step.accent}`,
-                        color: step.accent,
-                      }}
-                    >
-                      {step.n}
-                    </span>
-                    <span className="status-dot" style={{ background: step.accent }} />
-                  </div>
-                  <h3 className="mb-1 text-lg">{step.title}</h3>
+                <div className="card lift h-full p-6" style={{ borderTop: `2px solid ${step.accent}` }}>
+                  <span
+                    className="mb-4 inline-flex items-center justify-center rounded-full font-mono text-xs"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      background: "var(--bg-subtle)",
+                      border: `1px solid ${step.accent}`,
+                      color: step.accent,
+                    }}
+                  >
+                    {step.n}
+                  </span>
+                  <h3 className="mb-2 text-lg">{step.title}</h3>
                   <p className="caption">{step.body}</p>
                 </div>
               </div>
@@ -317,21 +280,18 @@ export default async function Home({
         </section>
 
         {/* Simulator: the whole flow, one click, on chain. */}
-        <section className="mb-14 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
+        <section className="mb-16 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <h2 className="text-3xl">Watch a dispute run</h2>
             <span className="pill pill-live">
               <span className="status-dot status-dot-live" /> real transactions
-            </span>
-            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-              one click: buy · fail · file · jury · settle
             </span>
           </div>
           <DisputeSimulator />
         </section>
 
         {/* How the escrow stands right now (bento density, glance-first). */}
-        <section className="mb-12" aria-label="Live stats">
+        <section className="mb-16" aria-label="Live stats">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span className="pill">testnet demo ledger</span>
             <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
@@ -348,17 +308,14 @@ export default async function Home({
           ) : (
             <div className="stagger grid grid-cols-2 gap-4 md:grid-cols-4">
               {(stats ? [
-                { label: "Disputes filed", value: stats.disputes, sub: "on the ledger" },
-                { label: "Settled by jury", value: stats.settled, sub: "consensus verdicts" },
-                { label: "Refunded", value: stats.refunded, sub: "units returned" },
-                { label: "Disputed volume", value: stats.total_disputed, sub: "units locked" },
+                { label: "Disputes filed", value: stats.disputes },
+                { label: "Settled by jury", value: stats.settled },
+                { label: "Refunded", value: stats.refunded },
+                { label: "Disputed volume", value: stats.total_disputed },
               ] : []).map((c) => (
-                <div key={c.label} className="card lift p-5">
-                  <p className="micro mb-2">{c.label}</p>
+                <div key={c.label} className="card lift p-6">
+                  <p className="micro mb-3">{c.label}</p>
                   <p className="number-lg">{c.value.toLocaleString()}</p>
-                  <p className="micro mt-1" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
-                    {c.sub}
-                  </p>
                 </div>
               ))}
             </div>
@@ -393,7 +350,7 @@ export default async function Home({
         </section>
 
         {/* Live feed: the product proof. */}
-        <section className="mb-14 scroll-mt-16" id="feed" aria-label="Live disputes">
+        <section className="mb-16 scroll-mt-16" id="feed" aria-label="Live disputes">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-3xl">Live disputes</h2>
             <span className="pill pill-live">
@@ -503,21 +460,11 @@ export default async function Home({
                 the dispute, call the jury, collect the settlement. Four tool
                 calls, zero humans.
               </p>
-              <div className="flex flex-col gap-3">
-                <div className="card p-4" style={{ borderLeft: "2px solid var(--accent)" }}>
-                  <p className="micro mb-1" style={{ color: "var(--accent)" }}>For agent builders</p>
-                  <p className="caption">Point your client at the endpoint and give it the config. The tools self-describe.</p>
-                </div>
-                <div className="card p-4" style={{ borderLeft: "2px solid var(--refund)" }}>
-                  <p className="micro mb-1" style={{ color: "var(--refund-strong)" }}>For API sellers</p>
-                  <p className="caption">Wrap your endpoint with the seller rail; bad deliveries become refundable, provably.</p>
-                </div>
-                <div className="card p-4" style={{ borderLeft: "2px solid var(--deny)" }}>
-                  <p className="micro mb-1" style={{ color: "var(--deny-strong)" }}>For humans</p>
-                  <p className="caption">File from the feed with one click. No wallet, no setup.</p>
-                </div>
-              </div>
-              <p className="micro mt-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+              <p className="caption">
+                Sellers can wrap their endpoints with the same rail, and humans
+                can file from the feed below without a wallet.
+              </p>
+              <p className="micro mt-5" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
                 GET /api/mcp self-describes · llms.txt at the root
               </p>
             </div>
