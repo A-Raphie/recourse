@@ -173,7 +173,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
         description: reqString(args.description, "description"),
         amount: clampAmount(args.amount),
       });
-      publishReceipts(String(args.dispute_id), "file_dispute", hash, String(receipt.created_at ?? "")).catch(() => {});
+      await publishReceipts(String(args.dispute_id), "file_dispute", hash, String(receipt.created_at ?? ""));
       return {
         text: `Dispute ${String(args.dispute_id)} filed and amount locked in escrow. Tx ${hash}. Next: call recourse_adjudicate.`,
         structuredContent: { filed: true, tx: hash },
@@ -182,8 +182,11 @@ async function callTool(name: string, args: Record<string, unknown>) {
     case "recourse_adjudicate": {
       const { hash, receipt } = await recourse.adjudicate(reqString(args.dispute_id, "dispute_id", 120));
       const dispute = await recourse.getDispute(reqString(args.dispute_id, "dispute_id", 120));
+      const pub = await publishReceipts(String(args.dispute_id), "adjudicate", hash, String(receipt.created_at ?? ""));
+      console.log("receipt publish:", JSON.stringify(pub));
+      const pubNote = pub.ok ? "" : ` (receipt publish failed: ${pub.error})`;
       return {
-        text: `Verdict: refund_pct=${dispute.refund_pct}, code=${dispute.verdict_code}, confidence=${dispute.confidence}. Tx ${hash}. Next: call recourse_settle.`,
+        text: `Verdict: refund_pct=${dispute.refund_pct}, code=${dispute.verdict_code}, confidence=${dispute.confidence}. Tx ${hash}.${pubNote} Next: call recourse_settle.`,
         structuredContent: { dispute, tx: hash, receipt },
       };
     }
@@ -191,7 +194,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
       const disputeId = reqString(args.dispute_id, "dispute_id", 120);
       const before = await recourse.getDispute(disputeId);
       const { hash, receipt } = await recourse.settle(disputeId);
-      publishReceipts(disputeId, "settle", hash, String(receipt.created_at ?? "")).catch(() => {});
+      await publishReceipts(disputeId, "settle", hash, String(receipt.created_at ?? ""));
       return {
         text: before.refund_pct > 0
           ? `Settled: escrow returned to payer. Tx ${hash}.`

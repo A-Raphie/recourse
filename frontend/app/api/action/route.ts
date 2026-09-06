@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
           amount: clampAmount(args.amount),
         });
         publishReceipts(dispute_id, "file_dispute", hash, String(receipt.created_at ?? "")).catch(() => {});
+        await publishReceipts(dispute_id, "file_dispute", hash, String(receipt.created_at ?? ""));
         return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), dispute_id });
       }
       case "adjudicate": {

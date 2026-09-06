@@ -59,9 +59,10 @@ export async function publishReceipts(
   kind: string,
   hash: string,
   at?: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
+  let lastError = "";
   const token = process.env.GITHUB_TOKEN;
-  if (!token) return false;
+  if (!token) return { ok: false, error: "GITHUB_TOKEN missing" };
   try {
     const { index: published, sha } = await readPublished(token);
     const merged = mergeLocal(published);
@@ -69,21 +70,29 @@ export async function publishReceipts(
       ...(merged[disputeId] ?? {}),
       [kind]: { hash, ...(at ? { at } : {}) },
     };
-    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${PATH}`, {
-      method: "PUT",
-      headers: ghHeaders(token),
-      body: JSON.stringify({
-        message: `receipts: ${disputeId} ${kind} [skip ci]`,
-        author: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
-        committer: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
-        content: Buffer.from(JSON.stringify(merged, null, 1) + "\n").toString("base64"),
-        branch: BRANCH,
-        ...(sha ? { sha } : {}),
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
+    // GitHub secondary rate limits bite on rapid successive Contents PUTs;
+    // one bounded retry keeps a burst (simulator = 3 writes) from losing
+    // receipts to a 403.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 4000));
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${PATH}`, {
+        method: "PUT",
+        headers: ghHeaders(token),
+        body: JSON.stringify({
+          message: `receipts: ${disputeId} ${kind} [skip ci]`,
+          author: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
+          committer: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
+          content: Buffer.from(JSON.stringify(merged, null, 1) + "\n").toString("base64"),
+          branch: BRANCH,
+          ...(sha ? { sha } : {}),
+        }),
+      });
+      if (res.ok) return { ok: true };
+      lastError = `HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`;
+    }
+    return { ok: false, error: lastError };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
