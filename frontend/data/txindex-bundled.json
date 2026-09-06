@@ -26,7 +26,10 @@
  "pub-1788685427": {
   "file_dispute": {
    "hash": "0xf18e9b62cbdc2eefe705a4e601bab7ebc0e77925851ee9a52cf8290996922f6c",
-   "at": "2026-09-06T09:03:48.216438+00:00"
+   "at": "2026-09-06T09:04:58.626Z"
+  },
+  "adjudicate": {
+   "hash": "0x9ec8927d7f37c8c00ca2c01b78e22249a946604a95864628ba3d9de6f1d1c51f"
   }
  }
 }
