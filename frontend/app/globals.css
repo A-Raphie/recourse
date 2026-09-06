@@ -402,6 +402,49 @@
   }
 }
 
+@layer components {
+  /* hero depth: two faint accent washes over the ink canvas. Gradients live
+     here and nowhere else (brief: hero only). */
+  .hero-wash {
+    background:
+      radial-gradient(60% 90% at 18% 0%, rgb(var(--accent-rgb) / 0.07) 0%, transparent 60%),
+      radial-gradient(38% 55% at 92% 18%, rgb(var(--lime-rgb) / 0.045) 0%, transparent 55%);
+  }
+
+  /* instrument texture: faint 44px grid, terminal feel */
+  .grid-texture {
+    background-image:
+      linear-gradient(rgb(var(--accent-rgb) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--accent-rgb) / 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* accent spine: instrument cards carry one cyan edge */
+  .card-inset {
+    border-top: 2px solid var(--accent);
+  }
+
+  /* hover lift for dense grids */
+  .lift {
+    transition: transform 150ms ease-out, border-color 150ms ease-out,
+      box-shadow 150ms ease-out;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+  }
+
+  /* stagger entrances once per load */
+  .stagger > * {
+    animation: fade-in 250ms ease-out both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger > *:nth-child(5) { animation-delay: 240ms; }
+}
+
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 250ms ease-out forwards;

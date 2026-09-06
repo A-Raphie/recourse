@@ -113,52 +113,134 @@ export default async function Home({
           </div>
         </nav>
 
-        {/* Hero: plain verbs. Agents are the audience; the CTA says so. */}
-        <section className="mb-14">
-          <h1
-            className="max-w-4xl"
-            style={{ fontSize: "clamp(2rem, 6vw, 4.2rem)", lineHeight: 1.04 }}
-          >
-            Your agent paid. The service lied.
-            <br />
-            <span style={{ color: "var(--accent)" }}>Get the units back.</span>
-          </h1>
-          <p className="caption mt-5 max-w-2xl text-base">
-            Recourse is a dispute layer for machine-to-machine payments on
-            GenLayer. File with pinned evidence, a jury of validators judges it
-            under consensus, and the escrowed amount settles refund-or-deny
-            on-chain. No emails. No support desk. A court that runs in a minute.
-          </p>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <Link href="#agent" className="btn btn-primary btn-lg">
-              Connect your agent · MCP
-            </Link>
-            <Link href="#feed" className="btn btn-ghost btn-lg">
-              See live disputes
-            </Link>
+        {/* HERO: split fold. Left: the pitch. Right: the live control room. */}
+        <section className="hero-wash relative mb-12 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--border-default)" }}>
+          <div className="grid-texture absolute inset-0" aria-hidden />
+          <div className="relative grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-12">
+            <div className="flex flex-col justify-center lg:col-span-7">
+              <p className="micro mb-4" style={{ color: "var(--accent)" }}>
+                Post-payment recourse · GenLayer Agent Tank
+              </p>
+              <h1
+                className="max-w-2xl"
+                style={{ fontSize: "clamp(2rem, 4.6vw, 3.9rem)", lineHeight: 1.03 }}
+              >
+                Your agent paid. The service lied.
+                <br />
+                <span style={{ color: "var(--accent)" }}>Get the units back.</span>
+              </h1>
+              <p className="caption mt-5 max-w-xl text-base">
+                A dispute layer for machine-to-machine payments. File with pinned
+                evidence, a jury of validators judges it under consensus, and the
+                escrowed amount settles on-chain. A court that runs in a minute.
+              </p>
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link href="#agent" className="btn btn-primary btn-lg">
+                  Connect your agent · MCP
+                </Link>
+                <Link href="#feed" className="btn btn-ghost btn-lg">
+                  See live disputes
+                </Link>
+              </div>
+              <p className="micro mt-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+                I ship agents: disputes as MCP tool calls · I buy services: file from the feed, no wallet needed
+              </p>
+            </div>
+
+            {/* Control room: the product, live, in the fold */}
+            <div className="lg:col-span-5">
+              <div className="card card-inset flex h-full flex-col overflow-hidden" style={{ boxShadow: "0 24px 60px -24px rgb(0 19 32 / 0.95), 0 0 0 1px rgb(var(--accent-rgb) / 0.12)" }}>
+                <div className="flex items-center justify-between border-b px-4 py-2.5" style={{ borderColor: "var(--border-default)", background: "var(--bg-subtle)" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="status-dot status-dot-live" />
+                    <span className="micro">control room</span>
+                  </div>
+                  <span className="pill pill-live" style={{ fontSize: "0.6rem", padding: "2px 8px" }}>
+                    live · studio
+                  </span>
+                </div>
+
+                {offline ? (
+                  <div className="flex flex-1 items-center justify-center p-6">
+                    <p className="caption">GenLayer RPC did not answer. Refresh: the chain is the only source.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-1 flex-col gap-4 p-5">
+                    <div>
+                      <p className="micro mb-1">Units returned by juries</p>
+                      <div className="flex items-baseline gap-3">
+                        <p className="number-xl" style={{ fontSize: "clamp(2.6rem, 4vw, 3.6rem)" }}>
+                          {stats?.total_refunded.toLocaleString() ?? "…"}
+                        </p>
+                        <span className="pill pill-refund" style={{ fontSize: "0.6rem" }}>
+                          {stats?.refunded ?? 0} refunds
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
+                        <p className="micro" style={{ fontSize: "0.58rem" }}>filed</p>
+                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.disputes ?? 0}</p>
+                      </div>
+                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
+                        <p className="micro" style={{ fontSize: "0.58rem" }}>settled</p>
+                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.settled ?? 0}</p>
+                      </div>
+                      <div className="rounded-lg border px-3 py-2" style={{ borderColor: "var(--border-default)" }}>
+                        <p className="micro" style={{ fontSize: "0.58rem" }}>pool</p>
+                        <p className="tabular font-mono text-lg" style={{ color: "var(--text-primary)" }}>{stats?.validator_pool ?? 0}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto">
+                      <p className="micro mb-2" style={{ fontSize: "0.58rem" }}>latest case</p>
+                      {disputes[0] ? (
+                        <Link
+                          href={`/d/${disputes[0].id}`}
+                          className="group flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+                          style={{ borderColor: "var(--border-default)", background: "var(--bg-subtle)" }}
+                        >
+                          <span className="font-mono text-xs" style={{ color: "var(--accent)" }}>
+                            /d/{disputes[0].id.slice(0, 22)}
+                          </span>
+                          <span className={`pill ${disputes[0].refund_pct > 0 ? "pill-refund" : "pill-deny"}`} style={{ fontSize: "0.58rem" }}>
+                            {disputes[0].status === "settled"
+                              ? `${disputes[0].refund_pct}% refund`
+                              : disputes[0].status}
+                          </span>
+                        </Link>
+                      ) : (
+                        <span className="caption">No cases yet. Run one below.</span>
+                      )}
+                    </div>
+
+                    <p className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
+                      chain 61999 · contract {CONTRACT.slice(0, 8)}…{CONTRACT.slice(-4)} · every number is chain state
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-            I ship agents: file and settle disputes as MCP tool calls. I buy
-            services: file from the feed below, no wallet needed.
-          </p>
-          <p className="micro mt-5" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-            live · genlayer studio testnet · contract {CONTRACT.slice(0, 10)}…{CONTRACT.slice(-6)}
-          </p>
         </section>
 
         {/* Simulator: the whole flow, one click, on chain. */}
         <section className="mb-14 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <h2 className="text-3xl">Watch a dispute run</h2>
             <span className="pill pill-live">
               <span className="status-dot status-dot-live" /> real transactions
+            </span>
+            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+              one click: buy · fail · file · jury · settle
             </span>
           </div>
           <DisputeSimulator />
         </section>
 
-        {/* Stats strip: four numbers, framed as the demo ledger they come from. */}
-        <section className="mb-14" aria-label="Live stats">
+        {/* How the escrow stands right now (bento density, glance-first). */}
+        <section className="mb-12" aria-label="Live stats">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span className="pill">testnet demo ledger</span>
             <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
@@ -173,11 +255,110 @@ export default async function Home({
               <p className="caption mt-1">Refresh the page; the chain state is the only source of these numbers.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {statCards.map((s) => (
-                <div key={s.label} className="card p-5">
-                  <p className="micro mb-2">{s.label}</p>
-                  <p className="number-lg">{s.value}</p>
+            <div className="stagger grid grid-cols-2 gap-4 md:grid-cols-4">
+              {(stats ? [
+                { label: "Disputes filed", value: stats.disputes, sub: "on the ledger" },
+                { label: "Settled by jury", value: stats.settled, sub: "consensus verdicts" },
+                { label: "Refunded", value: stats.refunded, sub: "units returned" },
+                { label: "Disputed volume", value: stats.total_disputed, sub: "units locked" },
+              ] : []).map((c) => (
+                <div key={c.label} className="card lift p-5">
+                  <p className="micro mb-2">{c.label}</p>
+                  <p className="number-lg">{c.value.toLocaleString()}</p>
+                  <p className="micro mt-1" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
+                    {c.sub}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* How a dispute runs: one connected line, four nodes. */}
+        <section className="mb-12">
+          <h2 className="mb-5 text-3xl">How a dispute runs</h2>
+          <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-4">
+            {[
+              { n: 1, title: "The agent pays", body: "A payer buys a service over x402 or any rail. The amount sits in the Recourse escrow ledger.", accent: "var(--refund)" },
+              { n: 2, title: "The deliverable is garbage", body: "A 500 page instead of the quote. Until now: no refund path existed.", accent: "var(--deny)" },
+              { n: 3, title: "The payer files", body: "One tool call pins both evidence URLs and locks amount plus anti-spam stake.", accent: "var(--accent)" },
+              { n: 4, title: "The jury settles", body: "Validators render both URLs, judge under consensus, escrow splits on-chain in about a minute.", accent: "var(--lime)" },
+            ].map((step, i) => (
+              <div key={step.n} className="relative">
+                {i > 0 && (
+                  <span
+                    aria-hidden
+                    className="absolute top-7 hidden h-px w-4 md:block"
+                    style={{ left: -16, background: "var(--border-default)" }}
+                  />
+                )}
+                <div className="card lift h-full p-5" style={{ borderTop: `2px solid ${step.accent}` }}>
+                  <div className="mb-3 flex items-center gap-3">
+                    <span
+                      className="inline-flex items-center justify-center rounded-full font-mono text-xs"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: "var(--bg-subtle)",
+                        border: `1px solid ${step.accent}`,
+                        color: step.accent,
+                      }}
+                    >
+                      {step.n}
+                    </span>
+                    <span className="status-dot" style={{ background: step.accent }} />
+                  </div>
+                  <h3 className="mb-1 text-lg">{step.title}</h3>
+                  <p className="caption">{step.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Simulator: the whole flow, one click, on chain. */}
+        <section className="mb-14 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <h2 className="text-3xl">Watch a dispute run</h2>
+            <span className="pill pill-live">
+              <span className="status-dot status-dot-live" /> real transactions
+            </span>
+            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+              one click: buy · fail · file · jury · settle
+            </span>
+          </div>
+          <DisputeSimulator />
+        </section>
+
+        {/* How the escrow stands right now (bento density, glance-first). */}
+        <section className="mb-12" aria-label="Live stats">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="pill">testnet demo ledger</span>
+            <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+              live counts from the GenLayer Studio demo, not production volume
+            </span>
+          </div>
+          {offline ? (
+            <div className="card p-5">
+              <span className="micro" style={{ color: "var(--status-error)" }}>
+                The GenLayer RPC did not answer just now.
+              </span>
+              <p className="caption mt-1">Refresh the page; the chain state is the only source of these numbers.</p>
+            </div>
+          ) : (
+            <div className="stagger grid grid-cols-2 gap-4 md:grid-cols-4">
+              {(stats ? [
+                { label: "Disputes filed", value: stats.disputes, sub: "on the ledger" },
+                { label: "Settled by jury", value: stats.settled, sub: "consensus verdicts" },
+                { label: "Refunded", value: stats.refunded, sub: "units returned" },
+                { label: "Disputed volume", value: stats.total_disputed, sub: "units locked" },
+              ] : []).map((c) => (
+                <div key={c.label} className="card lift p-5">
+                  <p className="micro mb-2">{c.label}</p>
+                  <p className="number-lg">{c.value.toLocaleString()}</p>
+                  <p className="micro mt-1" style={{ textTransform: "none", letterSpacing: "0.02em", fontSize: "0.62rem" }}>
+                    {c.sub}
+                  </p>
                 </div>
               ))}
             </div>
@@ -252,7 +433,7 @@ export default async function Home({
                         <tr
                           key={d.id}
                           className="border-b transition-colors last:border-0 hover:bg-subtle"
-                          style={{ borderColor: "var(--border-default)" }}
+                          style={{ borderColor: "var(--border-default)", boxShadow: "inset 0 0 0 0 transparent" }}
                         >
                           <td className="px-4 py-3">
                             <Link href={`/d/${d.id}`} className="font-mono text-xs" style={{ color: "var(--accent)" }}>
@@ -312,18 +493,38 @@ export default async function Home({
           )}
         </section>
 
-        {/* Connect your agent. */}
+        {/* Connect your agent: pitch left, instrument right. */}
         <section className="mb-6 scroll-mt-16" id="agent" aria-label="Connect your agent">
-          <h2 className="mb-5 text-3xl">Connect your agent</h2>
-          <p className="caption mb-4 max-w-2xl">
-            Any MCP client can run the whole loop: check the ledger, file the
-            dispute, call the jury, collect the settlement. Point it at the
-            endpoint and give it this config:
-          </p>
-          <DeveloperHub mcpUrl={`${SITE_URL}/api/mcp`} />
-          <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-            GET /api/mcp self-describes: tool list, flow, contract address. llms.txt at the root.
-          </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <h2 className="mb-4 text-3xl">Connect your agent</h2>
+              <p className="caption mb-5">
+                Any MCP client can run the whole loop: check the ledger, file
+                the dispute, call the jury, collect the settlement. Four tool
+                calls, zero humans.
+              </p>
+              <div className="flex flex-col gap-3">
+                <div className="card p-4" style={{ borderLeft: "2px solid var(--accent)" }}>
+                  <p className="micro mb-1" style={{ color: "var(--accent)" }}>For agent builders</p>
+                  <p className="caption">Point your client at the endpoint and give it the config. The tools self-describe.</p>
+                </div>
+                <div className="card p-4" style={{ borderLeft: "2px solid var(--refund)" }}>
+                  <p className="micro mb-1" style={{ color: "var(--refund-strong)" }}>For API sellers</p>
+                  <p className="caption">Wrap your endpoint with the seller rail; bad deliveries become refundable, provably.</p>
+                </div>
+                <div className="card p-4" style={{ borderLeft: "2px solid var(--deny)" }}>
+                  <p className="micro mb-1" style={{ color: "var(--deny-strong)" }}>For humans</p>
+                  <p className="caption">File from the feed with one click. No wallet, no setup.</p>
+                </div>
+              </div>
+              <p className="micro mt-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+                GET /api/mcp self-describes · llms.txt at the root
+              </p>
+            </div>
+            <div className="lg:col-span-8">
+              <DeveloperHub mcpUrl={`${SITE_URL}/api/mcp`} />
+            </div>
+          </div>
         </section>
       </main>
       <SiteFooter />
