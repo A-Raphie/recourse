@@ -31,5 +31,11 @@
   "adjudicate": {
    "hash": "0x9ec8927d7f37c8c00ca2c01b78e22249a946604a95864628ba3d9de6f1d1c51f"
   }
+ },
+ "test-1788696888": {
+  "file_dispute": {
+   "hash": "0x92771329c4a142f0dac1fe793ad0efd40dbe351894e9bf4ae5cfadbaa38a668d",
+   "at": "2026-09-06T12:17:22.018Z"
+  }
  }
 }
