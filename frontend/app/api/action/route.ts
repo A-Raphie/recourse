@@ -31,12 +31,12 @@ export async function POST(req: NextRequest) {
     switch (body.action) {
       case "deposit": {
         const amount = clampAmount(args.amount);
-        const { hash } = await recourse.deposit(amount);
-        return NextResponse.json({ ok: true, tx: hash, amount });
+        const { hash, receipt } = await recourse.deposit(amount);
+        return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), amount });
       }
       case "file": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
-        const { hash } = await recourse.fileDispute({
+        const { hash, receipt } = await recourse.fileDispute({
           dispute_id,
           provider: reqString(args.provider, "provider", 64),
           service_url: reqString(args.service_url, "service url"),
@@ -44,20 +44,20 @@ export async function POST(req: NextRequest) {
           description: reqString(args.description, "description"),
           amount: clampAmount(args.amount),
         });
-        return NextResponse.json({ ok: true, tx: hash, dispute_id });
+        return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), dispute_id });
       }
       case "adjudicate": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
         const { hash, receipt } = await recourse.adjudicate(dispute_id);
         const dispute = await recourse.getDispute(dispute_id);
-        return NextResponse.json({ ok: true, tx: hash, dispute, receipt });
+        return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), dispute, receipt });
       }
       case "settle": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
         const dispute = await recourse.getDispute(dispute_id);
         const refund = dispute.refund_pct > 0;
-        const { hash } = await recourse.settle(dispute_id);
-        return NextResponse.json({ ok: true, tx: hash, refund_pct: dispute.refund_pct });
+        const { hash, receipt } = await recourse.settle(dispute_id);
+        return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), refund_pct: dispute.refund_pct });
       }
       default:
         return NextResponse.json({ ok: false, error: `unknown action: ${body.action}` }, { status: 400 });

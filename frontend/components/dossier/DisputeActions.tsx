@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cacheJury } from "./JuryFromSession";
+import { saveReceipts } from "./receipts-store";
 
 export function DisputeActions({
   disputeId,
@@ -28,8 +29,19 @@ export function DisputeActions({
       const body = await res.json();
       if (!body.ok) {
         setError(body.error ?? "The action failed on chain");
-      } else if (action === "adjudicate" && body.receipt) {
-        cacheJury(disputeId, body.receipt);
+      } else {
+        const kindMap: Record<string, string> = {
+          file: "file_dispute",
+          adjudicate: "adjudicate",
+          settle: "settle",
+        };
+        const kind = kindMap[action];
+        if (kind && body.tx) {
+          saveReceipts(disputeId, { [kind]: { hash: body.tx, ...(body.at ? { at: body.at } : {}) } });
+        }
+        if (action === "adjudicate" && body.receipt) {
+          cacheJury(disputeId, body.receipt);
+        }
       }
     } catch {
       setError("Could not reach the action endpoint. Try again.");

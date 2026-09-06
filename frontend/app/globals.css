@@ -39,9 +39,13 @@
   --accent-subtle: #45d7ff14; /* portal --explorer-accent-soft */
   --accent-foreground: #001320;
 
-  /* Verdict pair (the product's core semantics). */
+  /* Verdict pair (the product's core semantics). Base colors for fills and
+     borders; -strong variants carry SMALL TEXT on tinted pill backgrounds at
+     >= 4.5:1 (measured: base refund green reads 4.12:1 at 11px). */
   --refund: #3eaa6d;
+  --refund-strong: #63c795;
   --deny: #ee8521;
+  --deny-strong: #f59a4e;
 
   /* Settled highlight: lime marks a settled event, nothing else. */
   --lime: #dfff00;
@@ -347,13 +351,13 @@
   .pill-refund {
     background: rgb(var(--refund-rgb) / 0.14);
     border-color: rgb(var(--refund-rgb) / 0.4);
-    color: var(--refund);
+    color: var(--refund-strong);
   }
 
   .pill-deny {
     background: rgb(var(--deny-rgb) / 0.14);
     border-color: rgb(var(--deny-rgb) / 0.4);
-    color: var(--deny);
+    color: var(--deny-strong);
   }
 
   .pill-live {

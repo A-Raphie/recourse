@@ -5,11 +5,13 @@ export function StatusPipeline({ status }: { status: string }) {
     { key: "settled", label: "Settled" },
   ];
   const current = steps.findIndex((s) => s.key === status);
+  // a settled case has completed every step, including the last one
+  const lastDone = status === "settled" ? steps.length : current;
 
   return (
     <ol className="flex items-center gap-0" aria-label="Dispute pipeline">
       {steps.map((step, i) => {
-        const done = i < current;
+        const done = i < lastDone;
         const active = i === current;
         return (
           <li key={step.key} className="flex items-center">

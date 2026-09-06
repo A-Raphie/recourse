@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cacheJury, jurySeatsFromReceipt } from "./dossier/JuryFromSession";
+import { saveReceipts } from "./dossier/receipts-store";
 import type { JurySeat } from "@/lib/server/genlayer";
 
 type StepState = "pending" | "running" | "done" | "failed";
@@ -97,6 +98,12 @@ export function DisputeSimulator() {
     return body as T;
   }
 
+  function keep(id: string, kind: string, body: { tx?: string; at?: string }) {
+    if (body.tx) {
+      saveReceipts(id, { [kind]: { hash: body.tx, ...(body.at ? { at: body.at } : {}) } });
+    }
+  }
+
   const run = useCallback(async () => {
     setRunning(true);
     setError(null);
@@ -121,22 +128,24 @@ export function DisputeSimulator() {
       });
 
       setStep("file", { state: "running", detail: "400 units + 100 anti-spam stake" });
-      await api("deposit", { amount: 1_000 });
-      await api("file", {
+      keep(id, "deposit", await api<{ tx: string; at: string }>("deposit", { amount: 1_000 }));
+      keep(id, "file_dispute", await api<{ tx: string; at: string }>("file", {
         dispute_id: id,
         provider: "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
         service_url: "https://raw.githubusercontent.com/A-Raphie/recourse/master/evidence/service-manifest.txt",
         evidence_url: "https://raw.githubusercontent.com/A-Raphie/recourse/master/evidence/deliverable-error.txt",
         description: "Paid for a live FX quote, the deliverable endpoint returned a 500 error",
         amount: AMOUNT,
-      });
+      }));
       setStep("file", { state: "done", detail: `escrow locked 500 units · /d/${id}` });
 
       setStep("jury", { state: "running", detail: "validators are judging · this takes about a minute" });
       timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
-      const adjudication = await api<{ receipt: unknown; dispute: { refund_pct: number } }>("adjudicate", {
-        dispute_id: id,
-      });
+      const adjudication = await api<{ tx: string; at: string; receipt: unknown; dispute: { refund_pct: number } }>(
+        "adjudicate",
+        { dispute_id: id },
+      );
+      keep(id, "adjudicate", adjudication);
       if (timerRef.current) clearInterval(timerRef.current);
       const receiptSeats = jurySeatsFromReceipt(adjudication.receipt);
       setSeats(receiptSeats);
@@ -148,7 +157,7 @@ export function DisputeSimulator() {
       });
 
       setStep("settle", { state: "running", detail: `${adjudication.dispute.refund_pct}% refund` });
-      await api("settle", { dispute_id: id });
+      keep(id, "settle", await api<{ tx: string; at: string }>("settle", { dispute_id: id }));
       setStep("settle", { state: "done", detail: `${adjudication.dispute.refund_pct}% refunded to the payer` });
     } catch (e) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -202,7 +211,7 @@ export function DisputeSimulator() {
                 }}
               >
                 {isLeader ? "LED" : String(seat.vote ?? "idle")} ·{" "}
-                {(seat.model ?? "model").split("/").slice(-1)[0]}
+                {(() => { const m = (seat.model ?? "").split("/").slice(-1)[0]; return m && m !== "unknown model" ? m : "validator seat"; })()}
               </span>
             );
           })}

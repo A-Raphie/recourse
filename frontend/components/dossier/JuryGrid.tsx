@@ -33,7 +33,8 @@ function Seat({ seat, index }: { seat: JurySeat; index: number }) {
   const isLeader = seat.role === "leader";
   const mood = seatMood(seat);
   const { label, color, bg, border, Icon } = MOOD_META[mood];
-  const shortModel = (seat.model ?? "model").split("/").slice(-1)[0];
+  const rawModel = (seat.model ?? "").split("/").slice(-1)[0];
+  const modelLabel = rawModel && rawModel !== "unknown model" ? rawModel : "validator seat";
 
   return (
     <div
@@ -59,7 +60,7 @@ function Seat({ seat, index }: { seat: JurySeat; index: number }) {
           {label}
         </span>
       </div>
-      <span className="font-mono text-sm text-txt-2">{shortModel}</span>
+      <span className="font-mono text-sm text-txt-2">{modelLabel}</span>
       <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", color: "var(--text-muted)" }}>
         {seat.execution_result === "SUCCESS" ? "executed clean" : seat.execution_result.toLowerCase()}
       </span>
@@ -78,11 +79,14 @@ export function JuryGrid({
   refundPct: number;
   verdictCode: string;
 }) {
-  const waiting = status === "filed" || seats.length === 0;
-  const leader = seats.find((s) => s.role === "leader");
+  const refund = refundPct > 0;
+  // awaiting = the case is genuinely unjudged. A judged case with no seat
+  // receipts on file is NEVER "awaiting": the verdict below is chain truth.
+  const awaiting = status === "filed";
+  const adjudicated = status !== "filed";
+  const haveSeats = seats.length > 0;
   const validators = seats.filter((s) => s.role !== "leader");
   const concurring = validators.filter((s) => s.vote === "agree").length;
-  const refund = refundPct > 0;
 
   return (
     <section className="card p-5" aria-label="The open jury">
@@ -90,40 +94,54 @@ export function JuryGrid({
         <h3 className="text-xl">
           The open jury
         </h3>
-        {waiting ? (
+        {awaiting ? (
           <span className="pill">
             <span className="status-dot" /> awaiting consensus
           </span>
-        ) : (
+        ) : haveSeats ? (
           <span className="pill pill-live">
             {concurring} of {validators.length} validators concurred
+          </span>
+        ) : (
+          <span className="pill pill-live">
+            <span className="status-dot status-dot-live" /> verdict on chain
           </span>
         )}
       </div>
 
-      {waiting ? (
+      {awaiting ? (
         <p className="caption">
           Five validator seats take this case when adjudication runs. Each one
           renders the evidence itself, judges it, and votes on the record.
         </p>
       ) : (
         <>
-          <p className="micro mb-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-            The leader ran the case and proposed the verdict.
-          </p>
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {seats.map((seat, i) => (
-              <Seat key={`${seat.address}-${i}`} seat={seat} index={i} />
-            ))}
-          </div>
+          {haveSeats ? (
+            <>
+              <p className="micro mb-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+                The leader ran the case and proposed the verdict.
+              </p>
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {seats.map((seat, i) => (
+                  <Seat key={`${seat.address}-${i}`} seat={seat} index={i} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="caption mb-4">
+              The validator pool agreed on the verdict below; it is final on
+              chain. Seat-by-seat receipts for this case publish with the next
+              deploy of the receipts index.
+            </p>
+          )}
           <div
             className="rounded-xl border p-4"
             style={{
-              borderColor: `rgb(var(--${refundPct > 0 ? "refund" : "deny"}-rgb) / 0.4)`,
-              background: `rgb(var(--${refundPct > 0 ? "refund" : "deny"}-rgb) / 0.08)`,
+              borderColor: `rgb(var(--${refund ? "refund" : "deny"}-rgb) / 0.4)`,
+              background: `rgb(var(--${refund ? "refund" : "deny"}-rgb) / 0.08)`,
             }}
           >
-            <span className="micro" style={{ color: `var(--${refundPct > 0 ? "refund" : "deny"})` }}>
+            <span className="micro" style={{ color: `var(--${refund ? "refund" : "deny"})` }}>
               {refund ? `Refund ${refundPct}%` : "No refund"} · consensus verdict · stake{" "}
               {refund ? "returned" : "slashed to validators"}
             </span>
@@ -131,6 +149,7 @@ export function JuryGrid({
               {verdictSentence(verdictCode)}
             </p>
           </div>
+          {adjudicated && !haveSeats && null}
         </>
       )}
     </section>

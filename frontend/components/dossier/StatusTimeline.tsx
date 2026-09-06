@@ -1,9 +1,9 @@
-import { getTxs } from "@/lib/server/txindex";
+"use client";
+
+import { useEffect, useState } from "react";
+import { readReceipts, type ReceiptMap } from "./receipts-store";
 
 const EXPLORER = "https://genlayer-explorer.vercel.app";
-
-// Vertical status timeline: every chain event of a dispute, in order, with
-// timestamps and explorer links straight from the receipts.
 
 const ORDER = [
   { key: "deposit", label: "Escrow funded" },
@@ -12,17 +12,35 @@ const ORDER = [
   { key: "settle", label: "Settled" },
 ] as const;
 
+function formatUtc(at: string): string {
+  return `${new Date(at).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  })} UTC`;
+}
+
 export function StatusTimeline({
   disputeId,
   status,
+  serverReceipts,
 }: {
   disputeId: string;
   status: string;
+  serverReceipts: ReceiptMap;
 }) {
-  const txs = getTxs(disputeId);
-  const entries = ORDER.map((o) => ({ ...o, entry: txs[o.key] }));
-  const reached = entries.filter((e) => e.entry?.hash).length;
+  const [sessionReceipts, setSessionReceipts] = useState<ReceiptMap>({});
+
+  useEffect(() => {
+    setSessionReceipts(readReceipts(disputeId));
+  }, [disputeId]);
+
+  const txs: ReceiptMap = { ...serverReceipts, ...sessionReceipts };
+  const entries = ORDER.map((o) => ({ ...o, receipt: txs[o.key] }));
   const done = status === "settled";
+  const anyReceipt = entries.some((e) => e.receipt?.hash);
 
   return (
     <section className="card p-5" aria-label="Status timeline">
@@ -36,7 +54,7 @@ export function StatusTimeline({
 
       <ol>
         {entries.map((e, i) => {
-          const happened = Boolean(e.entry?.hash);
+          const happened = Boolean(e.receipt?.hash);
           const isLast = i === entries.length - 1;
           return (
             <li key={e.key} className="flex items-stretch gap-3">
@@ -65,34 +83,22 @@ export function StatusTimeline({
                 >
                   {e.label}
                 </span>
-                {e.entry?.hash && (
+                {e.receipt?.hash && (
                   <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-0.5">
                     <a
-                      href={`${EXPLORER}/tx/${e.entry.hash}`}
+                      href={`${EXPLORER}/tx/${e.receipt.hash}`}
                       target="_blank"
                       rel="noreferrer"
                       className="font-mono text-xs"
                       style={{ color: "var(--accent)" }}
                     >
-                      {e.entry.hash.slice(0, 10)}…{e.entry.hash.slice(-8)}
+                      {e.receipt.hash.slice(0, 10)}…{e.receipt.hash.slice(-8)}
                     </a>
-                    {e.entry.at && (
+                    {e.receipt.at && (
                       <span className="font-mono text-xs" style={{ color: "var(--text-muted)" }}>
-                        {new Date(e.entry.at).toLocaleString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: "UTC",
-                        })}{" "}
-                        UTC
+                        {formatUtc(e.receipt.at)}
                       </span>
                     )}
-                  </span>
-                )}
-                {!happened && i === reached && (
-                  <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", color: "var(--text-muted)" }}>
-                    next step
                   </span>
                 )}
               </span>
@@ -100,6 +106,12 @@ export function StatusTimeline({
           );
         })}
       </ol>
+
+      {!anyReceipt && (
+        <p className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", color: "var(--text-muted)" }}>
+          Step receipts for this case publish with the next deploy; chain state above is live.
+        </p>
+      )}
     </section>
   );
 }

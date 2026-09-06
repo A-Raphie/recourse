@@ -117,7 +117,7 @@ export default async function Home({
         <section className="mb-14">
           <h1
             className="max-w-4xl"
-            style={{ fontSize: "clamp(2.4rem, 6vw, 4.2rem)", lineHeight: 1.02 }}
+            style={{ fontSize: "clamp(2rem, 6vw, 4.2rem)", lineHeight: 1.04 }}
           >
             Your agent paid. The service lied.
             <br />

@@ -8,6 +8,7 @@ import { EvidenceDuel, fetchText } from "@/components/dossier/EvidenceDuel";
 import { JuryGrid } from "@/components/dossier/JuryGrid";
 import { JuryFromSession } from "@/components/dossier/JuryFromSession";
 import { StatusTimeline } from "@/components/dossier/StatusTimeline";
+import { getTxs } from "@/lib/server/txindex";
 import { CopyField } from "@/components/DeveloperHub";
 import { DisputeActions } from "@/components/dossier/DisputeActions";
 
@@ -119,7 +120,7 @@ export default async function DossierPage({
 
         <DisputeActions disputeId={dispute.id} status={dispute.status} />
 
-        <StatusTimeline disputeId={dispute.id} status={dispute.status} />
+        <StatusTimeline disputeId={dispute.id} status={dispute.status} serverReceipts={getTxs(dispute.id)} />
       </div>
     </main>
   );
