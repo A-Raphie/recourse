@@ -14,7 +14,8 @@ Event: GenLayer Agent Tank (portal.genlayer.foundation/agent-tank/hackathon/) ·
 
 ## Ship record
 - Production: https://tryrecourse.vercel.app (Vercel project "recourse", team ernxtos-projects)
-- Canonical contract: 0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e (GenLayer Studio testnet)
+- Canonical contract: 0x86384c6F2F9C705464ED73ac1270DD9B6Af92EC8 (GenLayer Studio testnet) - v3 with anti-spam staking (100 units, returned on refund, slashed to validator pool on dismissal) and graduated refunds (refund_pct 0-100 in bounded steps, consensus-safe). Old v2 contract 0xB6d3... remains on chain with its history.
+- Sep 6 additions: Dispute Simulator (homepage, drives real deposit/buy/file/adjudicate/settle, live-verified end to end: sim case settled 100% refund), Developer Hub (TS/Python/cURL tabs + copy buttons + tool schema), vertical status timeline, copy fields on addresses/ids, jury chips with icons + honest leader-excluded consensus math, evidence diff panels, breadcrumb, testnet-framing chip, CTA hierarchy (agent-dev primary)
 - Env on Vercel: NEXT_PUBLIC_CONTRACT_ADDRESS, NEXT_PUBLIC_DEMO_ADDRESS, SELLER_ADDRESS, DEMO_KEY, X402_MODE=symbolic, NEXT_PUBLIC_SITE_URL (production scope; preview scope unavailable without git-linked project - CLI deploys only)
 - E2E: home + dossier + 404 in browser; MCP CLI QA on prod (read + write proving serverless DEMO_KEY); mobile 375px dossier pass
 - Fixes shipped during rehearsal: receipts index bundled (prod dossiers render jury), in-session jury capture from action receipts, OG card
