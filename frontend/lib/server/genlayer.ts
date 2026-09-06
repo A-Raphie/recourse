@@ -90,6 +90,19 @@ async function write(
     retries: 60,
     interval: 3000,
   })) as unknown as Record<string, unknown>;
+  // A reverted call still reaches consensus: validators MAJORITY_AGREE on the
+  // failed outcome, so "accepted" does NOT mean "executed". The leader receipt
+  // carries the real outcome; anything but SUCCESS must surface as an error.
+  const leader = (
+    receipt.consensus_data as
+      | { leader_receipt?: Array<{ execution_result?: string }> }
+      | undefined
+  )?.leader_receipt?.[0];
+  if (leader && leader.execution_result !== "SUCCESS") {
+    throw new Error(
+      `${functionName} failed on chain (execution_result: ${leader.execution_result ?? "unknown"})`,
+    );
+  }
   if (disputeId) recordTx(disputeId, functionName, hash, String(receipt.created_at ?? ""));
   return { hash, receipt };
 }
