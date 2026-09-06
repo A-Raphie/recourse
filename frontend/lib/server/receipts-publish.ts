@@ -73,7 +73,9 @@ export async function publishReceipts(
       method: "PUT",
       headers: ghHeaders(token),
       body: JSON.stringify({
-        message: `receipts: ${disputeId} ${kind}`,
+        message: `receipts: ${disputeId} ${kind} [skip ci]`,
+        author: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
+        committer: { name: "Recourse Bot", email: "A-Raphie@users.noreply.github.com" },
         content: Buffer.from(JSON.stringify(merged, null, 1) + "\n").toString("base64"),
         branch: BRANCH,
         ...(sha ? { sha } : {}),
