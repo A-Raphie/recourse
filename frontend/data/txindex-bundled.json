@@ -62,6 +62,10 @@
   "file_dispute": {
    "hash": "0x90a4dfeaa824209c1c0c897da64c33c03acfd5ca75a6fca3e5ec347fb73070b8",
    "at": "2026-09-06T12:52:32.685309+00:00"
+  },
+  "adjudicate": {
+   "hash": "0xc11b5d819853bd6fe9571d96ba9c14fe8b989f43032fb54590ebb226f203f0b6",
+   "at": "2026-09-06T12:52:43.698525+00:00"
   }
  }
 }
