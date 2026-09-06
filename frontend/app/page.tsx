@@ -122,7 +122,7 @@ export default async function Home({
             <Reveal delay={80}>
               <h1
                 className="mb-6 tracking-tight"
-                style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)", lineHeight: 1.05, fontWeight: 700 }}
+                style={{ fontSize: "clamp(1.9rem, 6vw, 4.5rem)", lineHeight: 1.06, fontWeight: 700, textWrap: "balance" }}
               >
                 Your agent paid. The service lied.
                 <br />

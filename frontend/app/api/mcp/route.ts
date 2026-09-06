@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recourse } from "@/lib/server/genlayer";
+import { publishReceipts } from "@/lib/server/receipts-publish";
 
 export const dynamic = "force-dynamic";
 
@@ -164,7 +165,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
       };
     }
     case "recourse_file_dispute": {
-      const { hash } = await recourse.fileDispute({
+      const { hash, receipt } = await recourse.fileDispute({
         dispute_id: reqString(args.dispute_id, "dispute_id", 120),
         provider: reqString(args.provider, "provider", 64),
         service_url: reqString(args.service_url, "service_url"),
@@ -172,6 +173,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
         description: reqString(args.description, "description"),
         amount: clampAmount(args.amount),
       });
+      publishReceipts(String(args.dispute_id), "file_dispute", hash, String(receipt.created_at ?? "")).catch(() => {});
       return {
         text: `Dispute ${String(args.dispute_id)} filed and amount locked in escrow. Tx ${hash}. Next: call recourse_adjudicate.`,
         structuredContent: { filed: true, tx: hash },
@@ -188,7 +190,8 @@ async function callTool(name: string, args: Record<string, unknown>) {
     case "recourse_settle": {
       const disputeId = reqString(args.dispute_id, "dispute_id", 120);
       const before = await recourse.getDispute(disputeId);
-      const { hash } = await recourse.settle(disputeId);
+      const { hash, receipt } = await recourse.settle(disputeId);
+      publishReceipts(disputeId, "settle", hash, String(receipt.created_at ?? "")).catch(() => {});
       return {
         text: before.refund_pct > 0
           ? `Settled: escrow returned to payer. Tx ${hash}.`

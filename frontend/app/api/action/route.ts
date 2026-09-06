@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recourse, getContractReceiptJury } from "@/lib/server/genlayer";
+import { publishReceipts } from "@/lib/server/receipts-publish";
 
 export const dynamic = "force-dynamic";
 
@@ -44,12 +45,14 @@ export async function POST(req: NextRequest) {
           description: reqString(args.description, "description"),
           amount: clampAmount(args.amount),
         });
+        publishReceipts(dispute_id, "file_dispute", hash, String(receipt.created_at ?? "")).catch(() => {});
         return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), dispute_id });
       }
       case "adjudicate": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
         const { hash, receipt } = await recourse.adjudicate(dispute_id);
         const dispute = await recourse.getDispute(dispute_id);
+        publishReceipts(dispute_id, "adjudicate", hash, String(receipt.created_at ?? "")).catch(() => {});
         return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), dispute, receipt });
       }
       case "settle": {
@@ -57,6 +60,7 @@ export async function POST(req: NextRequest) {
         const dispute = await recourse.getDispute(dispute_id);
         const refund = dispute.refund_pct > 0;
         const { hash, receipt } = await recourse.settle(dispute_id);
+        publishReceipts(dispute_id, "settle", hash, String(receipt.created_at ?? "")).catch(() => {});
         return NextResponse.json({ ok: true, tx: hash, at: String(receipt.created_at ?? ""), refund_pct: dispute.refund_pct });
       }
       default:

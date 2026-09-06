@@ -2,7 +2,7 @@ import { createClient } from "genlayer-js";
 import { TransactionStatus } from "genlayer-js/types";
 import { studionet } from "genlayer-js/chains";
 import { privateKeyToAccount } from "viem/accounts";
-import { recordTx, getTxs } from "./txindex";
+import { recordTx } from "./txindex";
 
 type GenlayerClient = ReturnType<typeof createClient>;
 type DemoAccount = ReturnType<typeof privateKeyToAccount>;
@@ -153,9 +153,8 @@ export type JurySeat = {
 // The Open Jury data: the adjudicate tx's consensus record carries every
 // validator's model and vote. Source of truth is the chain receipt; the
 // txindex only tells us which receipt to fetch.
-export async function getContractReceiptJury(disputeId: string): Promise<JurySeat[]> {
-  const txs = getTxs(disputeId);
-  const hash = txs["adjudicate"]?.hash;
+export async function getContractReceiptJury(adjudicateHash?: string): Promise<JurySeat[]> {
+  const hash = adjudicateHash;
   if (!hash) return [];
 
   const client = readClient();
