@@ -16,32 +16,38 @@ class Dispute:
     evidence_url: str
     description: str
     amount: u256
+    stake: u256
     status: str
-    refund: bool
+    refund_pct: u256
     verdict_code: str
     confidence: str
 
 
 REASON_CODES = ("service_unavailable", "wrong_content", "not_as_promised", "fulfilled")
+DISPUTE_STAKE = 100
 
 
 class Recourse(gl.Contract):
     """Post-payment recourse for the agent economy.
 
-    Agents route the disputed value through this contract: deposit credits a
-    party's balance, filing a dispute locks the disputed amount, and the
-    GenLayer validator jury settles it refund-or-deny. On settle the locked
-    amount returns to the payer (refund) or releases to the provider (deny).
+    Agents route disputed value through this contract: deposit credits a
+    party's balance, filing a dispute locks the disputed amount PLUS a fixed
+    anti-spam stake, and the GenLayer validator jury settles a graduated
+    refund (0-100 percent). On settle the escrow splits between payer and
+    provider; the stake returns to honest filers and is slashed to the
+    validator pool when a dispute is dismissed (refund_pct is 0).
     Amounts are ledger units for the hackathon demo, not live token transfers.
     """
 
     disputes: TreeMap[str, Dispute]
     balances: TreeMap[str, u256]
     locked: TreeMap[str, u256]
+    validator_pool: u256
     dispute_count: u256
 
     def __init__(self):
         self.dispute_count = 0
+        self.validator_pool = 0
 
     def _judge(self, service_url: str, evidence_url: str, description: str) -> dict:
         def judge() -> str:
@@ -61,13 +67,14 @@ The payer's claim:
 The actual deliverable or response the payer received:
 {evidence_page}
 
-Decide whether the deliverable fulfills the promise. Be strict about
+Decide how much of the charge the payer deserves back. Be strict about
 total failures (errors, empty or unrelated content) and lenient about
-stylistic differences.
+stylistic differences. A total failure earns 100; a fulfilled promise
+earns 0; a partial delivery earns the gap.
 
 Respond in JSON:
 {{
-    "refund": bool, // true if the payer deserves a refund
+    "refund_pct": int, // percent of the charge to refund, exactly one of: 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
     "reason_code": str, // exactly one of: "service_unavailable", "wrong_content", "not_as_promised", "fulfilled"
     "confidence": str // "low", "medium" or "high"
 }}
@@ -118,13 +125,14 @@ This result should be perfectly parsable by a JSON parser without errors.
 
         payer = gl.message.sender_address.as_hex
         available = self.balances.get(payer, 0)
-        if available < amount:
-            raise gl.vm.UserError("Insufficient balance, deposit first")
+        needed = amount + DISPUTE_STAKE
+        if available < needed:
+            raise gl.vm.UserError("Insufficient balance, deposit amount plus stake")
 
-        self.balances[payer] = available - amount
+        self.balances[payer] = available - needed
         if payer not in self.locked:
             self.locked[payer] = 0
-        self.locked[payer] += amount
+        self.locked[payer] += needed
 
         self.dispute_count += 1
         dispute = Dispute(
@@ -136,8 +144,9 @@ This result should be perfectly parsable by a JSON parser without errors.
             evidence_url=evidence_url,
             description=description,
             amount=amount,
+            stake=DISPUTE_STAKE,
             status="filed",
-            refund=False,
+            refund_pct=0,
             verdict_code="",
             confidence="",
         )
@@ -155,7 +164,11 @@ This result should be perfectly parsable by a JSON parser without errors.
             dispute.service_url, dispute.evidence_url, dispute.description
         )
 
-        dispute.refund = bool(verdict["refund"])
+        pct = int(verdict["refund_pct"])
+        if pct < 0 or pct > 100:
+            raise gl.vm.UserError("Refund percent out of range")
+
+        dispute.refund_pct = pct
         dispute.verdict_code = str(verdict["reason_code"])
         dispute.confidence = str(verdict["confidence"])
         dispute.status = "adjudicated"
@@ -171,18 +184,31 @@ This result should be perfectly parsable by a JSON parser without errors.
         payer = dispute.payer
         provider = dispute.provider
         locked_left = self.locked.get(payer, 0)
-        if locked_left < dispute.amount:
+        if locked_left < dispute.amount + dispute.stake:
             raise gl.vm.UserError("Escrow state inconsistent")
 
-        self.locked[payer] = locked_left - dispute.amount
-        if dispute.refund:
+        self.locked[payer] = locked_left - dispute.amount - dispute.stake
+
+        refund_units = dispute.amount * dispute.refund_pct // 100
+        keep_units = dispute.amount - refund_units
+
+        if refund_units > 0:
             if payer not in self.balances:
                 self.balances[payer] = 0
-            self.balances[payer] += dispute.amount
-        else:
+            self.balances[payer] += refund_units
+        if keep_units > 0:
             if provider not in self.balances:
                 self.balances[provider] = 0
-            self.balances[provider] += dispute.amount
+            self.balances[provider] += keep_units
+
+        # anti-spam stake: returned to honest filers, slashed to the
+        # validator pool when the dispute is dismissed entirely
+        if dispute.refund_pct > 0:
+            if payer not in self.balances:
+                self.balances[payer] = 0
+            self.balances[payer] += dispute.stake
+        else:
+            self.validator_pool += dispute.stake
 
         dispute.status = "settled"
 
@@ -208,8 +234,9 @@ This result should be perfectly parsable by a JSON parser without errors.
             "evidence_url": d.evidence_url,
             "description": d.description,
             "amount": d.amount,
+            "stake": d.stake,
             "status": d.status,
-            "refund": d.refund,
+            "refund_pct": d.refund_pct,
             "verdict_code": d.verdict_code,
             "confidence": d.confidence,
         }
@@ -246,9 +273,9 @@ This result should be perfectly parsable by a JSON parser without errors.
                 adjudicated += 1
             elif d.status == "settled":
                 settled += 1
-                if d.refund:
+                if d.refund_pct > 0:
                     refunded += 1
-                    total_refunded += d.amount
+                    total_refunded += d.amount * d.refund_pct // 100
                 else:
                     denied += 1
         return {
@@ -260,4 +287,5 @@ This result should be perfectly parsable by a JSON parser without errors.
             "denied": denied,
             "total_disputed": total_disputed,
             "total_refunded": total_refunded,
+            "validator_pool": self.validator_pool,
         }

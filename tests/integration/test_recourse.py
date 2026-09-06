@@ -1,9 +1,9 @@
-"""Recourse integration test on the hosted Studio (real consensus).
+"""Recourse v3 integration test on the hosted Studio (real consensus).
 
 Run with: gltest tests/integration/test_recourse.py -v -s
 
 Validators actually render the evidence URLs (this repo's raw fixtures),
-judge with a real LLM under eq_principle consensus, and settle on-chain.
+judge a graduated refund under consensus, and settle the escrow split.
 """
 
 import pytest
@@ -20,6 +20,8 @@ DELIVERABLE_URL = (
 )
 DISPUTE_ID = "smoke-d-001"
 AMOUNT = 400
+STAKE = 100
+DEPOSIT = 1_000
 
 
 @pytest.mark.integration
@@ -36,7 +38,7 @@ def test_dispute_full_flow():
 
     payer = str(get_default_account().address)
 
-    deposit_result = contract.deposit(args=[1_000]).transact()
+    deposit_result = contract.deposit(args=[DEPOSIT]).transact()
     assert tx_execution_succeeded(deposit_result)
 
     file_result = contract.file_dispute(
@@ -55,20 +57,23 @@ def test_dispute_full_flow():
     assert stored["status"] == "filed"
     assert stored["payer"].lower() == payer.lower()
     assert stored["amount"] == AMOUNT
-    assert stored["refund"] is False
+    assert stored["stake"] == STAKE
+    assert stored["refund_pct"] == 0
 
     balance = contract.get_balance(args=[payer]).call()
-    assert balance["available"] == 1_000 - AMOUNT
-    assert balance["locked"] == AMOUNT
+    assert balance["available"] == DEPOSIT - AMOUNT - STAKE
+    assert balance["locked"] == AMOUNT + STAKE
 
     adjudicate_result = contract.adjudicate(args=[DISPUTE_ID]).transact()
     assert tx_execution_succeeded(adjudicate_result)
 
     judged = contract.get_dispute(args=[DISPUTE_ID]).call()
     assert judged["status"] == "adjudicated"
-    assert isinstance(judged["refund"], bool)
+    assert judged["refund_pct"] in (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
     assert len(judged["verdict_code"]) > 0
-    print(f"VERDICT: refund={judged['refund']} code={judged['verdict_code']} confidence={judged['confidence']}")
+    print(
+        f"VERDICT: refund_pct={judged['refund_pct']} code={judged['verdict_code']} confidence={judged['confidence']}"
+    )
 
     settle_result = contract.settle(args=[DISPUTE_ID]).transact()
     assert tx_execution_succeeded(settle_result)
@@ -76,15 +81,12 @@ def test_dispute_full_flow():
     settled = contract.get_dispute(args=[DISPUTE_ID]).call()
     assert settled["status"] == "settled"
 
+    refund_units = AMOUNT * judged["refund_pct"] // 100
+    stake_back = STAKE if judged["refund_pct"] > 0 else 0
+
     balance_after = contract.get_balance(args=[payer]).call()
-    if judged["refund"]:
-        assert balance_after["available"] == 1_000
-        assert balance_after["locked"] == 0
-    else:
-        assert balance_after["available"] == 1_000 - AMOUNT
-        assert balance_after["locked"] == 0
-        provider_balance = contract.get_balance(args=[payer]).call()
-        assert provider_balance is not None
+    assert balance_after["available"] == DEPOSIT - AMOUNT - STAKE + refund_units + stake_back
+    assert balance_after["locked"] == 0
 
     stats = contract.get_stats().call()
     assert stats["disputes"] >= 1

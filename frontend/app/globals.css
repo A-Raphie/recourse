@@ -10,35 +10,11 @@
    desaturated verdict pair, grotesk weight-400 editorial, streaming events,
    borderless tint steps. */
 
-@font-face {
-  font-family: 'Switzer';
-  src: url('/fonts/Switzer-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Switzer';
-  src: url('/fonts/Switzer-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Switzer';
-  src: url('/fonts/Switzer-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 :root {
   /* Type roles. Mono is the data voice: addresses, verdicts, status strips. */
-  --font-sans: 'Switzer';
+  --font-sans: 'Switzer', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; /* Switzer loads when real woff2 files land in /public/fonts; the 404-stub files were removed Sep 6 */
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Elevation ladder, ordered base < subtle < surface < overlay.

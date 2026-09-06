@@ -87,7 +87,7 @@ export function EvidenceDuel({
   description,
   promisedText,
   deliveredText,
-  refund,
+  refundPct,
   adjudicated,
 }: {
   serviceUrl: string;
@@ -95,7 +95,7 @@ export function EvidenceDuel({
   description: string;
   promisedText: string;
   deliveredText: string;
-  refund: boolean;
+  refundPct: number;
   adjudicated: boolean;
 }) {
   const promiseLines = new Set(
@@ -104,15 +104,17 @@ export function EvidenceDuel({
   const deliveredLines = new Set(
     deliveredText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0),
   );
-  const verdictTone = !adjudicated ? "neutral" : refund ? "pass" : "fail";
+  const verdictTone = !adjudicated ? "neutral" : refundPct > 0 ? "pass" : "fail";
 
   return (
     <section className="card p-5" aria-label="The case">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-xl">The case</h3>
         {adjudicated ? (
-          refund ? (
+          refundPct >= 100 ? (
             <Chip tone="fail" icon={CircleAlert} label="DELIVERABLE FAILED" />
+          ) : refundPct > 0 ? (
+            <Chip tone="fail" icon={CircleAlert} label={`DELIVERABLE PARTIALLY HELD · ${refundPct}% REFUND`} />
           ) : (
             <Chip tone="pass" icon={CircleCheck} label="DELIVERABLE HELD UP" />
           )

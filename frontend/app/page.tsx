@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { DisputeSimulator } from "@/components/DisputeSimulator";
 import { recourse } from "@/lib/server/genlayer";
 import { getTxs } from "@/lib/server/txindex";
 import { SITE_URL } from "@/lib/site";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FileDisputeForm } from "@/components/dispute/FileDisputeForm";
+import { DeveloperHub } from "@/components/DeveloperHub";
 import type { RecourseDispute, RecourseStats } from "@/lib/server/genlayer";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +13,11 @@ export const dynamic = "force-dynamic";
 const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "";
 const PAGE_SIZE = 8;
 
-function StatusPill({ status, refund }: { status: string; refund: boolean }) {
+function StatusPill({ status, refundPct }: { status: string; refundPct: number }) {
   if (status === "settled") {
     return (
-      <span className={`pill ${refund ? "pill-refund" : "pill-deny"}`}>
-        {refund ? "settled · refunded" : "settled · denied"}
+      <span className={`pill ${refundPct > 0 ? "pill-refund" : "pill-deny"}`}>
+        {refundPct > 0 ? `settled · ${refundPct}% refunded` : "settled · denied"}
       </span>
     );
   }
@@ -79,6 +81,7 @@ export default async function Home({
         { label: "Settled by jury", value: stats.settled },
         { label: "Refunded", value: stats.refunded },
         { label: "Units returned", value: stats.total_refunded },
+        { label: "Slashed to validator pool", value: stats.validator_pool },
       ]
     : [];
 
@@ -141,6 +144,17 @@ export default async function Home({
           <p className="micro mt-5" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
             live · genlayer studio testnet · contract {CONTRACT.slice(0, 10)}…{CONTRACT.slice(-6)}
           </p>
+        </section>
+
+        {/* Simulator: the whole flow, one click, on chain. */}
+        <section className="mb-14 scroll-mt-16" id="simulate" aria-label="Dispute simulator">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <h2 className="text-3xl">Watch a dispute run</h2>
+            <span className="pill pill-live">
+              <span className="status-dot status-dot-live" /> real transactions
+            </span>
+          </div>
+          <DisputeSimulator />
         </section>
 
         {/* Stats strip: four numbers, framed as the demo ledger they come from. */}
@@ -261,7 +275,7 @@ export default async function Home({
                           </td>
                           <td className="tabular px-4 py-3">{d.amount.toLocaleString()}</td>
                           <td className="px-4 py-3">
-                            <StatusPill status={d.status} refund={d.refund} />
+                            <StatusPill status={d.status} refundPct={d.refund_pct} />
                           </td>
                           <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
                             {d.verdict_code || "-"}
@@ -306,18 +320,7 @@ export default async function Home({
             dispute, call the jury, collect the settlement. Point it at the
             endpoint and give it this config:
           </p>
-          <div className="card overflow-x-auto p-5">
-            <pre className="font-mono text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-{`{
-  "mcpServers": {
-    "recourse": {
-      "url": "${SITE_URL}/api/mcp",
-      "note": "flow: deposit, file_dispute, adjudicate, settle"
-    }
-  }
-}`}
-            </pre>
-          </div>
+          <DeveloperHub mcpUrl={`${SITE_URL}/api/mcp`} />
           <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
             GET /api/mcp self-describes: tool list, flow, contract address. llms.txt at the root.
           </p>

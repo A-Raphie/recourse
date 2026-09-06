@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
       case "settle": {
         const dispute_id = reqString(args.dispute_id, "dispute id", 120);
         const dispute = await recourse.getDispute(dispute_id);
-        const refund = dispute.refund;
+        const refund = dispute.refund_pct > 0;
         const { hash } = await recourse.settle(dispute_id);
-        return NextResponse.json({ ok: true, tx: hash, refund });
+        return NextResponse.json({ ok: true, tx: hash, refund_pct: dispute.refund_pct });
       }
       default:
         return NextResponse.json({ ok: false, error: `unknown action: ${body.action}` }, { status: 400 });

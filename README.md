@@ -3,7 +3,7 @@
 **Chargebacks for the agent economy.** An agent pays a provider, the deliverable comes back broken, and until now that was the end of the story. Recourse is a GenLayer intelligent contract where the payer files a dispute with pinned evidence, a jury of validators judges the claim under consensus, and the escrowed amount settles refund-or-deny on-chain.
 
 - **Live:** https://tryrecourse.vercel.app
-- **Contract:** `0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e` (GenLayer Studio testnet, chain 61999)
+- **Contract:** `0x86384c6F2F9C705464ED73ac1270DD9B6Af92EC8` (GenLayer Studio testnet, chain 61999)
 - **MCP endpoint:** `https://tryrecourse.vercel.app/api/mcp` (GET self-describes; `llms.txt` at the root)
 - **Track:** Agentic Commerce Infrastructure · GenLayer Agent Tank
 
@@ -33,6 +33,8 @@ payer agent            Recourse (GenLayer)              provider
 - **Evidence**: both URLs are rendered by validators at adjudication time. The dossier shows the same content with source links.
 - **Jury transparency**: validator seats, model names, and votes come from the adjudication receipt's consensus record. Receipts are indexed out-of-band (`data/txindex-bundled.json` plus in-session capture) because the chain does not expose tx hashes to contract reads; the chain receipt is always the source of truth.
 - **Agent surface**: `/api/mcp` is a hand-rolled JSON-RPC 2.0 streamable-http server (8 tools, GET self-describes). The seller rail (`/api/sell/fx-quote`) is wrapped with the real x402 protocol on Base Sepolia.
+- **Anti-spam staking**: filing locks a 100-unit stake alongside the disputed amount. The jury refunding returns the stake to the filer; a dismissed dispute (0% refund) slashes it to the validator pool. Spam has a price.
+- **Graduated refunds**: the jury settles a percentage (0-100 in bounded steps), not a binary. A 600-of-1000-records delivery settles 40% back. Bounded integers keep byte-agreement achievable across heterogeneous validator models; prose never does.
 
 ## Honest disclosures
 
@@ -48,6 +50,12 @@ payer agent            Recourse (GenLayer)              provider
 - 11 direct-mode contract tests (escrow both paths, guards, stats) - `pytest tests/direct/ -v`
 - Integration on the hosted Studio: deposit, file, consensus adjudication, settle - `gltest tests/integration/test_recourse.py -v` (about 110s)
 - MCP flow verified live end to end against the deployed endpoint.
+
+## Roadmap (post-event)
+
+- **recourse-sdk**: TypeScript + Python wrappers around fetch/axios/httpx that auto-file a dispute when a paid call returns status >= 500 or fails schema validation.
+- **Richer evidence types**: JSON-schema validation of payloads, signed prompt/response hash checks, and SLA latency triggers (auto-dispute above a threshold).
+- **Live-token escrow**: swap the symbolic ledger for stablecoin transfers on a GenLayer-connected rail.
 
 ## Stack
 

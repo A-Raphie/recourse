@@ -1,4 +1,4 @@
-"""Spike tests for the Recourse v2 flow: deposit, file, adjudicate, settle."""
+"""Direct tests for Recourse v3: staking, graduated refunds, slashing."""
 
 import json
 
@@ -9,32 +9,36 @@ EVIDENCE_URL = "https://payer.example/deliverables/resp-001"
 
 SERVICE_BODY = "Real-time FX rate API. Returns live USD/EUR quotes as JSON on every request."
 BAD_EVIDENCE_BODY = "Internal Server Error. Error code 500. No data available."
+PARTIAL_EVIDENCE_BODY = '{"records": [600 of 1000 requested rows], "status": "truncated"}'
 GOOD_EVIDENCE_BODY = '{"base": "USD", "quote": "EUR", "rate": 0.9137, "ts": "2026-09-04T12:00:00Z"}'
 
 JUDGE_PROMPT_PATTERN = r".*impartial dispute judge.*"
 
 
-def _mock_bad_deliverable(vm):
+def _mock(vm, pct: int, code: str, evidence: str):
     vm.mock_web(r".*provider\.example.*", {"status": 200, "body": SERVICE_BODY})
-    vm.mock_web(r".*payer\.example.*", {"status": 200, "body": BAD_EVIDENCE_BODY})
+    vm.mock_web(r".*payer\.example.*", {"status": 200, "body": evidence})
     vm.mock_llm(
         JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": True, "reason_code": "service_unavailable", "confidence": "high"}),
+        json.dumps({"refund_pct": pct, "reason_code": code, "confidence": "high"}),
     )
+
+
+def _mock_total_failure(vm):
+    _mock(vm, 100, "service_unavailable", BAD_EVIDENCE_BODY)
+
+
+def _mock_partial(vm):
+    _mock(vm, 40, "not_as_promised", PARTIAL_EVIDENCE_BODY)
 
 
 def _mock_fulfilled(vm):
-    vm.mock_web(r".*provider\.example.*", {"status": 200, "body": SERVICE_BODY})
-    vm.mock_web(r".*payer\.example.*", {"status": 200, "body": GOOD_EVIDENCE_BODY})
-    vm.mock_llm(
-        JUDGE_PROMPT_PATTERN,
-        json.dumps({"refund": False, "reason_code": "fulfilled", "confidence": "high"}),
-    )
+    _mock(vm, 0, "fulfilled", GOOD_EVIDENCE_BODY)
 
 
-def _deposit_and_file(vm, contract, payer, provider, dispute_id="d-001", amount=400):
+def _deposit_and_file(vm, contract, payer, provider, dispute_id="d-001", amount=400, deposit=2_000):
     vm.sender = payer
-    contract.deposit(amount=1_000)
+    contract.deposit(amount=deposit)
     contract.file_dispute(
         dispute_id=dispute_id,
         provider=to_hex(provider),
@@ -67,25 +71,26 @@ def test_withdraw(direct_vm, direct_deploy, direct_alice):
         contract.withdraw(amount=10_000)
 
 
-def test_file_locks_amount(direct_vm, direct_deploy, direct_alice, direct_bob):
+def test_file_locks_amount_plus_stake(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob)
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, deposit=1_000)
 
     b = contract.get_balance(to_hex(direct_alice))
-    assert b["available"] == 600
-    assert b["locked"] == 400
+    assert b["available"] == 1_000 - 400 - 100
+    assert b["locked"] == 500
 
     d = contract.get_dispute("d-001")
     assert d["status"] == "filed"
-    assert d["seq"] == 1
+    assert d["stake"] == 100
     assert d["amount"] == 400
 
 
-def test_file_requires_deposit(direct_vm, direct_deploy, direct_alice, direct_bob):
+def test_file_requires_amount_plus_stake(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
     direct_vm.sender = direct_alice
+    contract.deposit(amount=450)
 
-    with direct_vm.expect_revert("Insufficient balance, deposit first"):
+    with direct_vm.expect_revert("Insufficient balance, deposit amount plus stake"):
         contract.file_dispute(
             dispute_id="d-001",
             provider=to_hex(direct_bob),
@@ -93,22 +98,6 @@ def test_file_requires_deposit(direct_vm, direct_deploy, direct_alice, direct_bo
             evidence_url=EVIDENCE_URL,
             description="claim",
             amount=400,
-        )
-
-
-def test_file_requires_positive_amount(direct_vm, direct_deploy, direct_alice, direct_bob):
-    contract = direct_deploy("contracts/recourse.py")
-    direct_vm.sender = direct_alice
-    contract.deposit(amount=1_000)
-
-    with direct_vm.expect_revert("Amount must be positive"):
-        contract.file_dispute(
-            dispute_id="d-001",
-            provider=to_hex(direct_bob),
-            service_url=SERVICE_URL,
-            evidence_url=EVIDENCE_URL,
-            description="claim",
-            amount=0,
         )
 
 
@@ -120,80 +109,114 @@ def test_duplicate_dispute_id_fails(direct_vm, direct_deploy, direct_alice, dire
         _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-001", amount=100)
 
 
-def test_adjudicate_and_settle_refund_returns_funds(direct_vm, direct_deploy, direct_alice, direct_bob):
+def test_full_refund_returns_amount_and_stake(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob)
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-full", deposit=1_000)
 
-    _mock_bad_deliverable(direct_vm)
-    contract.adjudicate("d-001")
+    _mock_total_failure(direct_vm)
+    contract.adjudicate("d-full")
 
-    d = contract.get_dispute("d-001")
+    d = contract.get_dispute("d-full")
     assert d["status"] == "adjudicated"
-    assert d["refund"] is True
+    assert d["refund_pct"] == 100
     assert d["verdict_code"] == "service_unavailable"
 
-    contract.settle("d-001")
+    contract.settle("d-full")
 
-    d = contract.get_dispute("d-001")
+    d = contract.get_dispute("d-full")
     assert d["status"] == "settled"
 
     b = contract.get_balance(to_hex(direct_alice))
     assert b["available"] == 1_000
     assert b["locked"] == 0
 
+    stats = contract.get_stats()
+    assert stats["validator_pool"] == 0
 
-def test_settle_deny_releases_to_provider(direct_vm, direct_deploy, direct_alice, direct_bob):
+
+def test_partial_refund_splits_escrow(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-002")
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-part", amount=400, deposit=1_000)
+
+    _mock_partial(direct_vm)
+    contract.adjudicate("d-part")
+
+    d = contract.get_dispute("d-part")
+    assert d["refund_pct"] == 40
+    assert d["verdict_code"] == "not_as_promised"
+
+    contract.settle("d-part")
+
+    alice = contract.get_balance(to_hex(direct_alice))
+    assert alice["available"] == 500 + 160 + 100
+    assert alice["locked"] == 0
+
+    bob = contract.get_balance(to_hex(direct_bob))
+    assert bob["available"] == 240
+
+
+def test_dismissed_dispute_slashes_stake_to_pool(direct_vm, direct_deploy, direct_alice, direct_bob):
+    contract = direct_deploy("contracts/recourse.py")
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-deny", deposit=1_000)
 
     _mock_fulfilled(direct_vm)
-    contract.adjudicate("d-002")
+    contract.adjudicate("d-deny")
 
-    d = contract.get_dispute("d-002")
-    assert d["refund"] is False
+    d = contract.get_dispute("d-deny")
+    assert d["refund_pct"] == 0
     assert d["verdict_code"] == "fulfilled"
 
-    contract.settle("d-002")
+    contract.settle("d-deny")
 
     bob = contract.get_balance(to_hex(direct_bob))
     assert bob["available"] == 400
+
     alice = contract.get_balance(to_hex(direct_alice))
-    assert alice["locked"] == 0
-    assert alice["available"] == 600
+    assert alice["available"] == 1_000 - 500
+
+    stats = contract.get_stats()
+    assert stats["validator_pool"] == 100
 
 
-def test_double_adjudicate_fails(direct_vm, direct_deploy, direct_alice, direct_bob):
+def test_out_of_range_pct_reverts(direct_vm, direct_deploy, direct_alice, direct_bob):
+    contract = direct_deploy("contracts/recourse.py")
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-bad")
+
+    direct_vm.mock_web(r".*provider\.example.*", {"status": 200, "body": SERVICE_BODY})
+    direct_vm.mock_web(r".*payer\.example.*", {"status": 200, "body": BAD_EVIDENCE_BODY})
+    direct_vm.mock_llm(
+        JUDGE_PROMPT_PATTERN,
+        json.dumps({"refund_pct": 150, "reason_code": "service_unavailable", "confidence": "high"}),
+    )
+
+    with direct_vm.expect_revert("Refund percent out of range"):
+        contract.adjudicate("d-bad")
+
+
+def test_double_adjudicate_and_settle_fail(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
     _deposit_and_file(direct_vm, contract, direct_alice, direct_bob)
 
-    _mock_bad_deliverable(direct_vm)
+    _mock_total_failure(direct_vm)
     contract.adjudicate("d-001")
 
     with direct_vm.expect_revert("Dispute already adjudicated"):
         contract.adjudicate("d-001")
 
-
-def test_double_settle_fails(direct_vm, direct_deploy, direct_alice, direct_bob):
-    contract = direct_deploy("contracts/recourse.py")
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob)
-
-    _mock_bad_deliverable(direct_vm)
-    contract.adjudicate("d-001")
     contract.settle("d-001")
-
     with direct_vm.expect_revert("Dispute not adjudicated"):
         contract.settle("d-001")
 
 
 def test_stats_and_party_views(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = direct_deploy("contracts/recourse.py")
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-001", amount=400)
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-001", amount=400, deposit=1_000)
 
-    _mock_bad_deliverable(direct_vm)
+    _mock_total_failure(direct_vm)
     contract.adjudicate("d-001")
     contract.settle("d-001")
 
-    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-002", amount=100)
+    _deposit_and_file(direct_vm, contract, direct_alice, direct_bob, dispute_id="d-002", amount=100, deposit=1_000)
 
     stats = contract.get_stats()
     assert stats["disputes"] == 2

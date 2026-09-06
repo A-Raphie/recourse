@@ -20,8 +20,9 @@ export type RecourseDispute = {
   evidence_url: string;
   description: string;
   amount: number;
+  stake: number;
   status: "filed" | "adjudicated" | "settled";
-  refund: boolean;
+  refund_pct: number;
   verdict_code: string;
   confidence: string;
 };
@@ -35,6 +36,7 @@ export type RecourseStats = {
   denied: number;
   total_disputed: number;
   total_refunded: number;
+  validator_pool: number;
 };
 
 function readClient(): GenlayerClient {

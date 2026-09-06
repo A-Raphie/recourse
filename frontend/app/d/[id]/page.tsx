@@ -7,7 +7,8 @@ import { StatusPipeline } from "@/components/dossier/StatusPipeline";
 import { EvidenceDuel, fetchText } from "@/components/dossier/EvidenceDuel";
 import { JuryGrid } from "@/components/dossier/JuryGrid";
 import { JuryFromSession } from "@/components/dossier/JuryFromSession";
-import { ReceiptStrip } from "@/components/dossier/ReceiptStrip";
+import { StatusTimeline } from "@/components/dossier/StatusTimeline";
+import { CopyField } from "@/components/DeveloperHub";
 import { DisputeActions } from "@/components/dossier/DisputeActions";
 
 export const dynamic = "force-dynamic";
@@ -69,7 +70,9 @@ export default async function DossierPage({
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="micro mb-1">Disputed amount, locked in escrow</p>
+            <p className="micro mb-1">
+              Disputed amount, locked in escrow · +{dispute.stake.toLocaleString()} anti-spam stake
+            </p>
             <p className="number-xl">{dispute.amount.toLocaleString()}</p>
           </div>
           <StatusPipeline status={dispute.status} />
@@ -85,7 +88,7 @@ export default async function DossierPage({
               description={dispute.description}
               promisedText={promisedText}
               deliveredText={deliveredText}
-              refund={dispute.refund}
+              refundPct={dispute.refund_pct}
               adjudicated={dispute.status !== "filed"}
             />
           </div>
@@ -95,15 +98,11 @@ export default async function DossierPage({
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="micro">Payer</span>
-                  <span className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
-                    {dispute.payer.slice(0, 6)}…{dispute.payer.slice(-4)}
-                  </span>
+                  <CopyField value={dispute.payer} display={`${dispute.payer.slice(0, 6)}…${dispute.payer.slice(-4)}`} />
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="micro">Provider</span>
-                  <span className="font-mono text-xs" style={{ color: "var(--text-secondary)" }}>
-                    {dispute.provider.slice(0, 6)}…{dispute.provider.slice(-4)}
-                  </span>
+                  <CopyField value={dispute.provider} display={`${dispute.provider.slice(0, 6)}…${dispute.provider.slice(-4)}`} />
                 </div>
               </div>
             </section>
@@ -111,7 +110,7 @@ export default async function DossierPage({
             <JuryGrid
               seats={jury}
               status={dispute.status}
-              refund={dispute.refund}
+              refundPct={dispute.refund_pct}
               verdictCode={dispute.verdict_code}
             />
             {jury.length === 0 && <JuryFromSession disputeId={dispute.id} />}
@@ -120,7 +119,7 @@ export default async function DossierPage({
 
         <DisputeActions disputeId={dispute.id} status={dispute.status} />
 
-        <ReceiptStrip disputeId={dispute.id} />
+        <StatusTimeline disputeId={dispute.id} status={dispute.status} />
       </div>
     </main>
   );

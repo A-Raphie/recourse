@@ -102,7 +102,7 @@ export function FileDisputeForm() {
           {busy ? "Filing on chain…" : "File on chain"}
         </button>
         <span className="micro" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-          Files through the demo key, locks the amount in escrow. Adjudicate from the dossier.
+          Files through the demo key: locks 400 units + 100 anti-spam stake. The stake returns if the jury refunds, and is slashed if the dispute is dismissed.
         </span>
       </div>
       {error && (

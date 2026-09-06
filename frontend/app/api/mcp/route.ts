@@ -62,7 +62,7 @@ const TOOLS = [
   {
     name: "recourse_file_dispute",
     description:
-      "File a post-payment dispute: the payer claims the delivered service failed the promise. Locks the disputed amount in escrow, then a GenLayer validator jury adjudicates the pinned evidence. Call recourse_deposit first if the demo account has no balance.",
+      "File a post-payment dispute: the payer claims the delivered service failed the promise. Locks the disputed amount PLUS a 100-unit anti-spam stake (returned when the jury refunds, slashed when the dispute is dismissed), then a GenLayer validator jury adjudicates the pinned evidence. Call recourse_deposit first if the demo account has no balance.",
     inputSchema: {
       type: "object",
       properties: {
@@ -135,7 +135,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
     case "recourse_get_dispute": {
       const dispute = await recourse.getDispute(reqString(args.dispute_id, "dispute_id", 120));
       return {
-        text: `Dispute ${dispute.id}: ${dispute.status}, refund=${dispute.refund}, code=${dispute.verdict_code || "-"}, confidence=${dispute.confidence || "-"}.`,
+        text: `Dispute ${dispute.id}: ${dispute.status}, refund_pct=${dispute.refund_pct}, code=${dispute.verdict_code || "-"}, confidence=${dispute.confidence || "-"}.`,
         structuredContent: dispute,
       };
     }
@@ -181,7 +181,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
       const { hash, receipt } = await recourse.adjudicate(reqString(args.dispute_id, "dispute_id", 120));
       const dispute = await recourse.getDispute(reqString(args.dispute_id, "dispute_id", 120));
       return {
-        text: `Verdict: refund=${dispute.refund}, code=${dispute.verdict_code}, confidence=${dispute.confidence}. Tx ${hash}. Next: call recourse_settle.`,
+        text: `Verdict: refund_pct=${dispute.refund_pct}, code=${dispute.verdict_code}, confidence=${dispute.confidence}. Tx ${hash}. Next: call recourse_settle.`,
         structuredContent: { dispute, tx: hash, receipt },
       };
     }
@@ -190,10 +190,10 @@ async function callTool(name: string, args: Record<string, unknown>) {
       const before = await recourse.getDispute(disputeId);
       const { hash } = await recourse.settle(disputeId);
       return {
-        text: before.refund
+        text: before.refund_pct > 0
           ? `Settled: escrow returned to payer. Tx ${hash}.`
           : `Settled: escrow released to provider. Tx ${hash}.`,
-        structuredContent: { settled: true, refund: before.refund, tx: hash },
+        structuredContent: { settled: true, refund_pct: before.refund_pct, tx: hash },
       };
     }
     default:

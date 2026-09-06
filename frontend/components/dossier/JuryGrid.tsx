@@ -70,19 +70,19 @@ function Seat({ seat, index }: { seat: JurySeat; index: number }) {
 export function JuryGrid({
   seats,
   status,
-  refund,
+  refundPct,
   verdictCode,
 }: {
   seats: JurySeat[];
   status: string;
-  refund: boolean;
+  refundPct: number;
   verdictCode: string;
 }) {
   const waiting = status === "filed" || seats.length === 0;
   const leader = seats.find((s) => s.role === "leader");
   const validators = seats.filter((s) => s.role !== "leader");
   const concurring = validators.filter((s) => s.vote === "agree").length;
-  const upheld = leader ? leader.execution_result === "SUCCESS" : false;
+  const refund = refundPct > 0;
 
   return (
     <section className="card p-5" aria-label="The open jury">
@@ -109,8 +109,7 @@ export function JuryGrid({
       ) : (
         <>
           <p className="micro mb-4" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-            The leader ran the case and proposed the verdict
-            {upheld ? "; the validator pool upheld it." : "; the pool did not uphold it."}
+            The leader ran the case and proposed the verdict.
           </p>
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {seats.map((seat, i) => (
@@ -120,12 +119,13 @@ export function JuryGrid({
           <div
             className="rounded-xl border p-4"
             style={{
-              borderColor: `rgb(var(--${refund ? "refund" : "deny"}-rgb) / 0.4)`,
-              background: `rgb(var(--${refund ? "refund" : "deny"}-rgb) / 0.08)`,
+              borderColor: `rgb(var(--${refundPct > 0 ? "refund" : "deny"}-rgb) / 0.4)`,
+              background: `rgb(var(--${refundPct > 0 ? "refund" : "deny"}-rgb) / 0.08)`,
             }}
           >
-            <span className="micro" style={{ color: `var(--${refund ? "refund" : "deny"})` }}>
-              {refund ? "Refund" : "No refund"} · consensus verdict
+            <span className="micro" style={{ color: `var(--${refundPct > 0 ? "refund" : "deny"})` }}>
+              {refund ? `Refund ${refundPct}%` : "No refund"} · consensus verdict · stake{" "}
+              {refund ? "returned" : "slashed to validators"}
             </span>
             <p className="mt-1 text-lg" style={{ color: "var(--text-primary)" }}>
               {verdictSentence(verdictCode)}
