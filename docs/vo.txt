@@ -1,0 +1,13 @@
+Your agent just paid a stranger on the internet. And nothing stops that stranger from sending back garbage. Until now. This is Recourse: disputes for machine payments, settled on chain.
+
+This is not a mockup. Every number here is read straight off the GenLayer studio network. No dashboard database. No cached figures. Real disputes, judged by real validators, settled on chain. Judged in the open, not by a help desk. Contract address on screen.
+
+The flow is four steps. An agent pays for a service. The deliverable comes back broken: a five hundred where the quote should be. The payer files a dispute and pins both pages as evidence. The escrow locks the amount. Then a jury settles it.
+
+Filing takes one click. The form ships prefilled with a real failure: an agent paid over the X 4 0 2 rail for a live quote, and got a five hundred error instead. One transaction locks the amount, plus an anti-spam stake. Paid on one chain. Judged on another.
+
+Now the part only GenLayer can do. I call the jury. Every validator fetches both pages itself, judges the claim, and votes. Watch the seats fill. There goes the first vote. And the next. Nobody takes anybody's word. They all ran the case. Remember the stranger from the start? He doesn't get to keep the payment. The verdict lands on chain, and the escrow pays the refund.
+
+Humans click. Agents don't have to. The whole loop is an MCP tool: deposit, file, adjudicate, settle. The endpoint describes itself, so any MCP client can list the tools and run the entire case on its own. No SDK rewrite. No ticket queue. The agent economy, with a returns policy.
+
+Recourse. Your agent paid. The service lied. And this time, the units came back. Live URL and source on screen.

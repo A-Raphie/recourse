@@ -31,13 +31,13 @@
 ### Scene 4: File a real dispute (0:56-1:16)
 **Criterion:** Judge path + UX
 **Show:** Live feed. Click "File a dispute": the form is prefilled with a real failed delivery. Click "File on chain", toast confirms, redirect to the new dossier.
-**Say:** "Filing takes one click. The form ships prefilled with a real failure: an agent paid over x402 for a live FX quote, and got a five hundred error instead. One transaction locks the amount, plus an anti-spam stake. Paid on one chain. Judged on another."
+**Say:** "Filing takes one click. The form ships prefilled with a real failure: an agent paid over the X 4 0 2 rail for a live quote, and got a five hundred error instead. One transaction locks the amount, plus an anti-spam stake. Paid on one chain. Judged on another."
 **Action:** Click File a dispute → File on chain → wait for redirect to the dossier.
 
 ### Scene 5: The open jury (1:16-2:05)
 **Criterion:** Sponsor-tech centrality: THE money moment
 **Show:** The dossier: the case (promise vs delivered side by side), then click "Call the jury". The page waits, then the jury seats land: five validators, each with its model, votes filling in, the concurrence counter, the verdict card: REFUND.
-**Say:** "Now the part only GenLayer can do. I call the jury. Every validator fetches both pages itself, judges the claim, and votes. Watch the seats fill. There goes the first vote. And the next. Nobody takes anybody's word; they all ran the case. Remember the stranger from the start? He doesn't get to keep the payment. The verdict lands on chain, and the escrow pays the refund."
+**Say:** "Now the part only GenLayer can do. I call the jury. Every validator fetches both pages itself, judges the claim, and votes. Watch the seats fill. There goes the first vote. And the next. Nobody takes anybody's word. They all ran the case. Remember the stranger from the start? He doesn't get to keep the payment. The verdict lands on chain, and the escrow pays the refund."
 **Action:** Click "Call the jury", let the wait breathe ("about a minute" pending state on the button), then hold 3 seconds after the verdict card lands. Do not cut early.
 **Note:** for the recording, adjudicate a fresh dispute so the seats land live on camera. The Say line is deliberately model-agnostic: jury composition and the concurrence count are nondeterministic, so the pre-recorded VO never names models or counts; the screen shows them.
 
@@ -65,7 +65,7 @@
 | Close | 20s | 7 |
 | **Total** | **2:45** | |
 
-**VO word count:** ~302 words. On pace with the 320/3min standard for the 2:45 target; the adjudication wait eats screen time without words, which is the honest pacing for a consensus demo.
+**VO word count:** ~305 words. On pace with the 320/3min standard for the 2:45 target; the adjudication wait eats screen time without words, which is the honest pacing for a consensus demo. Say lines are TTS-ready (audited safe character set); the paste-ready extraction lives in docs/vo.txt, one paragraph per scene.
 
 **Submission checklist:**
 - [x] Live URL shown: https://tryrecourse.vercel.app
