@@ -65,7 +65,7 @@
 | Close | 15s | 7 |
 | **Total** | **2:30** | |
 
-**VO word count:** ~285 words. Sits under the 320/3min standard proportionally; the adjudication wait eats screen time without words, which is the honest pacing.
+**VO word count:** ~221 words. Deliberately under the 320/3min standard: the adjudication wait eats screen time without words, which is the honest pacing for a consensus demo.
 
 **Submission checklist:**
 - [x] Live URL shown: https://tryrecourse.vercel.app
