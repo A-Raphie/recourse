@@ -130,8 +130,8 @@ export function JuryGrid({
           ) : (
             <p className="caption mb-4">
               The validator pool agreed on the verdict below; it is final on
-              chain. Seat-by-seat receipts for this case publish with the next
-              deploy of the receipts index.
+              chain. Seat-by-seat receipts for this case publish to the public
+              receipts index automatically.
             </p>
           )}
           <div

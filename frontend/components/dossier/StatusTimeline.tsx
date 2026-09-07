@@ -109,7 +109,7 @@ export function StatusTimeline({
 
       {!anyReceipt && (
         <p className="micro" style={{ textTransform: "none", letterSpacing: "0.02em", color: "var(--text-muted)" }}>
-          Step receipts for this case publish with the next deploy; chain state above is live.
+          Step receipts for this case publish to the public receipts index automatically; chain state above is live.
         </p>
       )}
     </section>

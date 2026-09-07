@@ -68,7 +68,7 @@ function CachedNotice({ seats }: { seats: JurySeat[] }) {
   return (
     <p className="micro mt-3" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
       Session receipt on file: {agreed} of {seats.length} seats concurred in your
-      browser. Refresh the receipts index on the next deploy to publish it site-wide.
+      browser; the public receipts index carries the canonical seat-by-seat record.
     </p>
   );
 }
