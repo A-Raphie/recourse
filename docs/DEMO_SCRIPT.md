@@ -18,7 +18,7 @@
 
 ### Scene 2: It is live (0:10-0:32)
 **Criterion:** Deployment proof + product
-**Show:** Scroll to the stats strip: 2 disputes, 1 settled by jury, 1 refunded, 400 units returned. Mono status line: live · genlayer studio · contract address.
+**Show:** Scroll to the stats strip: disputes filed, settled by jury, refunded, units returned. Mono status line: live · genlayer studio · contract address.
 **Say:** "This is not a mockup. These numbers are read straight off the GenLayer studio network. Real disputes, judged by real validators, settled on chain. Contract address on screen."
 **Action:** Slow scroll, pause on each stat card.
 
@@ -31,15 +31,15 @@
 ### Scene 4: File a real dispute (0:52-1:08)
 **Criterion:** Judge path + UX
 **Show:** Live feed. Click "File a dispute": the form is prefilled with a real failed delivery. Click "File on chain", toast confirms, redirect to the new dossier.
-**Say:** "Filing takes one click. The form ships prefilled with a real failure: paid for a live FX quote, got a five hundred error instead. Filing locks the amount in escrow, on chain, right now."
+**Say:** "Filing takes one click. The form ships prefilled with a real failure: an agent paid over x402 for a live FX quote, and got a five hundred error instead. Filing locks the amount in escrow, on chain, right now."
 **Action:** Click File a dispute → File on chain → wait for redirect to the dossier.
 
 ### Scene 5: The open jury (1:08-1:55)
 **Criterion:** Sponsor-tech centrality: THE money moment
 **Show:** The dossier: the case (promise vs delivered side by side), then click "Call the jury". The page waits, then the jury seats land: five validators, each with its model, votes filling in, "4 of 5 concurred", the verdict card: REFUND.
-**Say:** "Now the part only GenLayer can do. I call the jury. Five validators each fetch both pages themselves, judge the claim, and vote. Watch the seats. A Gemini model led. Grok agreed. Mistral agreed. Four of five concurred, and the verdict is written on chain: refund. The service was unreachable when it mattered."
+**Say:** "Now the part only GenLayer can do. I call the jury. Every validator fetches both pages itself, judges the claim, and votes. Watch the seats fill. Nobody takes anybody's word; they all ran the case. The verdict is written on chain, and the escrow splits: full refund."
 **Action:** Click "Call the jury", let the wait breathe ("about a minute" pending state on the button), then hold 3 seconds after the verdict card lands. Do not cut early.
-**Note:** for the recording, adjudicate a fresh dispute so the seats land live on camera.
+**Note:** for the recording, adjudicate a fresh dispute so the seats land live on camera. The Say line is deliberately model-agnostic: jury composition and the concurrence count are nondeterministic, so the pre-recorded VO never names models or counts; the screen shows them.
 
 ### Scene 6: Agents call it as a tool (1:55-2:15)
 **Criterion:** Agent-legibility
@@ -70,6 +70,6 @@
 **Submission checklist:**
 - [x] Live URL shown: https://tryrecourse.vercel.app
 - [x] GitHub shown: https://github.com/A-Raphie/recourse
-- [x] Contract address shown: 0xB6d3c089B0AC336EFEe9820Ce9fFddE3573C177e
+- [x] Contract address shown: 0x86384c6F2F9C705464ED73ac1270DD9B6Af92EC8
 - [x] Chain shown: GenLayer Studio testnet, explorer link in receipts
 - [ ] Demo video: recording gated on Raphie's VO
