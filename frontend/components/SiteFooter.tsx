@@ -1,6 +1,6 @@
 import { recourse } from "@/lib/server/genlayer";
 
-const EXPLORER = "https://genlayer-explorer.vercel.app";
+const EXPLORER = "https://explorer-studio.genlayer.com";
 const REPO = "https://github.com/A-Raphie/recourse";
 const PORTAL = "https://portal.genlayer.foundation/agent-tank/hackathon/";
 

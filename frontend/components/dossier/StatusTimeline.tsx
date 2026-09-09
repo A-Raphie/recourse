@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { readReceipts, type ReceiptMap } from "./receipts-store";
 
-const EXPLORER = "https://genlayer-explorer.vercel.app";
+const EXPLORER = "https://explorer-studio.genlayer.com";
 
 const ORDER = [
   { key: "deposit", label: "Escrow funded" },
