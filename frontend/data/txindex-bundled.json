@@ -222,6 +222,10 @@
   "adjudicate": {
    "hash": "0x9aec6c7bf878efda1a7637b5659d6344586efb0988ad08dfa6f06ff73b678f90",
    "at": "2026-09-09T22:24:39.661303+00:00"
+  },
+  "settle": {
+   "hash": "0x092c6f1c571f177435d6e7f63c1dbc8b4b597f8acd56c89fba36f3d07fa8fd66",
+   "at": "2026-09-09T22:24:59.118842+00:00"
   }
  }
 }
