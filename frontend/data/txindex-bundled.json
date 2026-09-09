@@ -218,6 +218,10 @@
   "file_dispute": {
    "hash": "0x7b3d3bfbcc2609892d3bc7ffdb0e04c9bb649e0a1407603c538b85f2aeb7dd52",
    "at": "2026-09-09T22:23:52.949926+00:00"
+  },
+  "adjudicate": {
+   "hash": "0x9aec6c7bf878efda1a7637b5659d6344586efb0988ad08dfa6f06ff73b678f90",
+   "at": "2026-09-09T22:24:39.661303+00:00"
   }
  }
 }
