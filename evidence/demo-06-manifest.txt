@@ -1,0 +1,7 @@
+Email Verification API.
+
+Verify any address: mailbox existence, domain validity, disposable detection.
+Documented accuracy: 99 percent.
+Response time under 500 ms.
+
+Example: "team@stripe.com" -> {"valid":true,"reason":"accepted_all"}

@@ -1,0 +1,6 @@
+Currency Conversion API.
+
+Convert any amount using live interbank rates.
+Rates refresh every 60 seconds across 168 currencies.
+
+Example: 1,000 USD -> 912.40 EUR at rate 0.9124.

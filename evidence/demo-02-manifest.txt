@@ -1,0 +1,10 @@
+Real-time Weather API.
+
+Current conditions for any city worldwide.
+Updates every minute.
+Guaranteed uptime: 99.9 percent.
+Response format: JSON with temperature, humidity, and wind.
+
+Example: {"city":"Berlin","temperature":12.4,"humidity":78,"wind":14}
+
+Uptime this month: 99.97 percent.

@@ -1,0 +1,5 @@
+Verification unavailable: the SMTP probe was rejected by the receiving
+mail server (connection refused after 5 attempts).
+
+No verification result was produced.
+The address was neither confirmed valid nor invalid.

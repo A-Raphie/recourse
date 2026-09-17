@@ -1,0 +1,4 @@
+Scraper blocked: the target domain returned an anti-bot challenge (403).
+No fields were extracted. Retries exhausted: 3 of 3.
+
+Partial output: {"title":null,"price":null,"currency":null,"available":null}

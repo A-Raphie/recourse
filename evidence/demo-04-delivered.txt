@@ -1,0 +1,6 @@
+{"label":"positive","confidence":0.0}
+
+Warning: the classifier returned a zero confidence score.
+The label was produced by a fallback table, not the model.
+
+The review it misclassified: "The device broke after two days and support ignored me."

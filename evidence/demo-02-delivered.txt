@@ -1,0 +1,7 @@
+Gateway Timeout.
+
+The upstream weather provider did not respond within 30 seconds.
+Request id: wth-9f41c2.
+No weather data is available for the requested city.
+
+This is an automated error message from the edge proxy.

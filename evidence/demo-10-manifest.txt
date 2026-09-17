@@ -1,0 +1,7 @@
+Image Processing API.
+
+Resize, crop, and convert any image to your exact specification.
+Supports PNG, JPEG, WebP, and AVIF up to 50 MB.
+Average processing time: 900 ms.
+
+Example: 4000x3000 JPEG -> 800x600 WebP in 850 ms.

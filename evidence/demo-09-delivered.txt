@@ -1,0 +1,5 @@
+{"text":"[placeholder transcript]","words":[]}
+
+The acoustic model returned an empty hypothesis for the provided audio.
+The audio itself was decoded correctly (duration 42 seconds detected).
+No words were transcribed.

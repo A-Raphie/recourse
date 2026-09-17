@@ -1,0 +1,7 @@
+Neural Translation API.
+
+Translate text between 42 language pairs in real time.
+Preserves formatting and tone.
+Average latency: 180 ms.
+
+Example: "Good morning" -> "Bonjour" (en -> fr).

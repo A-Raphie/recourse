@@ -1,0 +1,7 @@
+Speech-to-Text API.
+
+Transcribe audio in 30+ languages with word-level timestamps.
+Documented word error rate: under 8 percent.
+Supports MP3, WAV, and M4A up to 25 MB.
+
+Example output: {"text":"...","words":[{"w":"hello","t":1.24}]}

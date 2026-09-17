@@ -1,0 +1,4 @@
+{"base":"USD","quote":"EUR","rate":0.8523,"as_of":"2024-11-03"}
+
+Note: this conversion used a rate snapshot from 2024-11-03.
+The live rate feed has been disconnected since deployment.

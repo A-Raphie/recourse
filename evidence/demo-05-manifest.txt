@@ -1,0 +1,7 @@
+Product Price Scraper.
+
+Extract the current price, title, and availability from any product page.
+Handles 4,000+ retail domains.
+Returns structured JSON in under 3 seconds.
+
+Example: {"title":"Desk lamp","price":129.99,"currency":"USD","available":true}

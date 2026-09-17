@@ -1,0 +1,7 @@
+Translation failed: the model returned the input unchanged.
+
+Source (en): The shipment arrives on Friday.
+Output (fr): The shipment arrives on Friday.
+
+The expected French translation was not produced.
+No retry was attempted.

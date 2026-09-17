@@ -1,0 +1,7 @@
+Sentiment Analysis API.
+
+Classify customer reviews as positive, neutral, or negative.
+Documented accuracy: 95 percent on the benchmark set.
+The response includes the label and a confidence score.
+
+Example: "Love it" -> {"label":"positive","confidence":0.98}

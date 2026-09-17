@@ -1,0 +1,4 @@
+The rendering worker crashed after the PDF header was written.
+
+The resulting file contains only the header bytes and cannot be
+opened by any PDF reader. No invoice content was produced.

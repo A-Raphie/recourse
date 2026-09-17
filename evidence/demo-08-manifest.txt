@@ -1,0 +1,7 @@
+Invoice PDF Generator.
+
+Generate a compliant invoice PDF from a JSON payload in under 2 seconds.
+Includes line items, tax breakdown, and payment details.
+Output is a valid PDF 1.7 document.
+
+Example payload: {"seller":"Acme GmbH","lines":[{"item":"Widget","qty":2,"price":50}]}

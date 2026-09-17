@@ -3,20 +3,78 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Judge path: every field ships prefilled with the demo scenario so one
-// click files a real dispute; each field stays editable.
+// Judge path: every field ships prefilled with a real failure so one
+// click files a real dispute; each field stays editable. The scenario
+// rotates per form open so the docket does not fill with identical cases.
+const EVIDENCE_BASE = "https://raw.githubusercontent.com/A-Raphie/recourse/master/evidence";
+const SCENARIOS = [
+  {
+    service_url: `${EVIDENCE_BASE}/demo-01-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-01-delivered.txt`,
+    description: "Paid for a live FX quote, the deliverable endpoint returned a 500 error",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-02-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-02-delivered.txt`,
+    description: "Paid for real-time weather data, the endpoint timed out and returned no conditions",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-03-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-03-delivered.txt`,
+    description: "Paid for English to French translation, the API returned the input unchanged",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-04-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-04-delivered.txt`,
+    description: "Paid for sentiment analysis on an angry review, it returned positive with zero confidence",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-05-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-05-delivered.txt`,
+    description: "Paid for price extraction from a product page, the scraper was blocked and returned nulls",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-06-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-06-delivered.txt`,
+    description: "Paid for email verification, the API failed the SMTP probe and returned no result",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-07-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-07-delivered.txt`,
+    description: "Paid for a live currency conversion, the API served a rate snapshot from 2024",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-08-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-08-delivered.txt`,
+    description: "Paid for an invoice PDF, the renderer crashed and the file is unreadable",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-09-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-09-delivered.txt`,
+    description: "Paid for audio transcription, the API returned a placeholder with zero words",
+  },
+  {
+    service_url: `${EVIDENCE_BASE}/demo-10-manifest.txt`,
+    evidence_url: `${EVIDENCE_BASE}/demo-10-delivered.txt`,
+    description: "Paid for image resizing, the worker timed out and no output was produced",
+  },
+];
+
 export function FileDisputeForm() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    dispute_id: `d-${new Date().toISOString().slice(5, 10).replace("-", "")}-${Math.floor(Math.random() * 900 + 100)}`,
-    provider: "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
-    service_url: "https://raw.githubusercontent.com/A-Raphie/recourse/master/evidence/service-manifest.txt",
-    evidence_url: "https://raw.githubusercontent.com/A-Raphie/recourse/master/evidence/deliverable-error.txt",
-    description: "Paid for a live FX quote, the deliverable endpoint returned a 500 error",
-    amount: 400,
+  const [form, setForm] = useState(() => {
+    const scenario = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
+    return {
+      dispute_id: `d-${new Date().toISOString().slice(5, 10).replace("-", "")}-${Math.floor(Math.random() * 900 + 100)}`,
+      provider: "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
+      service_url: scenario.service_url,
+      evidence_url: scenario.evidence_url,
+      description: scenario.description,
+      amount: 400,
+    };
   });
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {

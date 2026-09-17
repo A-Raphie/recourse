@@ -1,0 +1,5 @@
+504 Gateway Timeout.
+
+The image worker did not complete the transformation within the
+allowed window. The source image was received but no output was
+produced. Request id: img-77e4b1.
